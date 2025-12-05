@@ -63,7 +63,7 @@
             <p class="error-msg">${msg}</p>
         </c:if>
         
-        <form action="<%= request.getContextPath() %>/member/LoginAction.do" method="post">
+        <form action="<%= request.getContextPath() %>/member/loginaction.do" method="post">
             <div class="input-group">
                 <input type="text" name="id" placeholder="아이디" required
                        value="<%= savedID %>">
