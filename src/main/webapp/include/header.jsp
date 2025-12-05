@@ -15,7 +15,7 @@
             }
             .pc-only-link {
                 display: none !important;
-            }  
+            }
         }
     </style>
     <script>
