@@ -1,1 +1,15 @@
+# Eclipse Files
+.settings/
+.classpath
+.project
+*.snap
+
+# Build Artifacts
+/target/
 /build/
+
+# Dependencies (JAR files)
+/src/main/webapp/WEB-INF/lib/*.jar
+
+# Log and temporary files
+*.log
