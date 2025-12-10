@@ -1,0 +1,11 @@
+# Compiled Class and Build Directories
+/build/
+/bin/
+*.class
+
+# Logs and Temp files
+*.log
+/tmp/
+
+# External Dependencies (Optional: 이미 올린 ojdbc11.jar 등 제외)
+# /src/main/webapp/WEB-INF/lib/*.jar
