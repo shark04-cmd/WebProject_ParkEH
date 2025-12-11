@@ -28,7 +28,7 @@ boolean isDataBoard = "data".equals(boardType);
 <html>
 <head>
 <meta charset="UTF-8">
-<title><%=boardName%> 목록 - WevProject_PaekEH</title>
+<title><%=boardName%> 목록 - WevProject_ParkEH</title>
 <style>
 /* 기존 공통 스타일 */
 body {
@@ -244,7 +244,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<%
@@ -377,8 +377,7 @@ body {
 							<%="TITLE".equals(searchField) ? "selected" : ""%>>제목</option>
 						<option value="CONTENT"
 							<%="CONTENT".equals(searchField) ? "selected" : ""%>>내용</option>
-						<option value="ID"
-							<%="ID".equals(searchField) ? "selected" : ""%>>작성자</option>
+						<option value="ID" <%="ID".equals(searchField) ? "selected" : ""%>>작성자</option>
 					</select> <input type="text" name="searchWord" placeholder="검색어 입력"
 						value="<%=searchWord != null ? searchWord : ""%>"> <input
 						type="submit" value="검색">

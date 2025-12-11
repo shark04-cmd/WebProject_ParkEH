@@ -20,7 +20,7 @@ if (logoutMessage != null) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>메인 - WevProject_PaekEH</title>
+<title>메인 - WevProject_ParkEH</title>
 <style>
 /* 으녀기님이 요청하신 스타일 적용 */
 body {
@@ -160,7 +160,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<%

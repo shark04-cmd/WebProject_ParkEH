@@ -1,71 +1,79 @@
 package board;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import jakarta.servlet.ServletContext;
 
+import jakarta.servlet.ServletContext;
 import common.JDBConnect;
 
 public class BoardDAO extends JDBConnect {
 
 	private String tableName;
 
-	// 생성자: 게시판 유형에 따라 테이블 이름을 동적으로 설정합니다.
 	public BoardDAO(ServletContext application, String boardType) {
 		super(application);
-		if ("free".equals(boardType)) {
-			this.tableName = "board_free";
-		} else if ("qna".equals(boardType)) {
-			this.tableName = "board_qna";
-		} else if ("data".equals(boardType)) {
-			this.tableName = "board_data";
-		} else {
-			this.tableName = "board_free"; // 기본값
+
+		// 🔴 문제의 핵심 수정 부분: boardType 유효성 검사 강화
+		String type = "free";
+		if (boardType != null && !boardType.trim().isEmpty()) {
+			String lowerCaseType = boardType.trim().toLowerCase();
+			// 정해진 타입(free, qna, data)만 허용하고 아니면 기본값 'free' 유지
+			if (lowerCaseType.equals("free") || lowerCaseType.equals("qna") || lowerCaseType.equals("data")) {
+				type = lowerCaseType;
+			}
 		}
+		this.tableName = "BOARD_" + type.toUpperCase();
 	}
 
-	// 1. 검색 조건에 맞는 게시물의 개수를 반환합니다.
 	public int selectCount(Map<String, Object> map) {
 		int totalCount = 0;
-		// 쿼리에 tableName을 적용합니다.
 		String query = "SELECT COUNT(*) FROM " + tableName;
-
-		// 검색어가 있을 경우 WHERE 조건 추가
 		if (map.get("searchWord") != null) {
-			query += " WHERE " + map.get("searchField") + " LIKE '%" + map.get("searchWord") + "%'";
+			query += " WHERE " + map.get("searchField") + " LIKE ?";
 		}
 
 		try {
-			stmt = con.createStatement();
-			rs = stmt.executeQuery(query);
-			rs.next();
-			totalCount = rs.getInt(1);
+			psmt = con.prepareStatement(query);
+			if (map.get("searchWord") != null) {
+				psmt.setString(1, "%" + map.get("searchWord") + "%");
+			}
+
+			rs = psmt.executeQuery();
+			if (rs.next()) {
+				totalCount = rs.getInt(1);
+			}
 		} catch (Exception e) {
-			System.out.println("게시물 카운트 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 게시물 카운트 중 예외 발생");
 			e.printStackTrace();
 		}
 		return totalCount;
 	}
 
-	// 3. 검색 조건에 맞는 게시물 목록을 반환합니다. (페이징 적용)
 	public List<BoardDTO> selectListPaging(Map<String, Object> map) {
 		List<BoardDTO> boardList = new ArrayList<BoardDTO>();
 
-		// 쿼리에 tableName을 적용합니다.
-		String query = "SELECT * FROM ( " + " SELECT Tb.*, ROWNUM rNum FROM ( " + "  SELECT * FROM " + tableName;
+		String query = "SELECT * FROM ( " + "    SELECT ROWNUM rNum, B.* FROM ( " + "        SELECT * FROM "
+				+ tableName;
 
-		// 검색어가 있을 경우 WHERE 조건 추가
 		if (map.get("searchWord") != null) {
-			query += " WHERE " + map.get("searchField") + " LIKE '%" + map.get("searchWord") + "%'";
+			query += " WHERE " + map.get("searchField") + " LIKE ?";
 		}
 
-		query += " ORDER BY num DESC " + " ) Tb " + " ) WHERE rNum BETWEEN ? AND ?";
+		query += " ORDER BY num DESC " + "    ) B " + ") " + "WHERE rNum BETWEEN ? AND ?";
 
 		try {
 			psmt = con.prepareStatement(query);
-			psmt.setInt(1, (Integer) map.get("start")); // 시작 번호
-			psmt.setInt(2, (Integer) map.get("end")); // 끝 번호
+			int index = 1;
+
+			if (map.get("searchWord") != null) {
+				psmt.setString(index++, "%" + map.get("searchWord") + "%");
+			}
+
+			psmt.setString(index++, map.get("start").toString());
+			psmt.setString(index, map.get("end").toString());
+
 			rs = psmt.executeQuery();
 
 			while (rs.next()) {
@@ -74,35 +82,79 @@ public class BoardDAO extends JDBConnect {
 				dto.setTitle(rs.getString("title"));
 				dto.setContent(rs.getString("content"));
 				dto.setId(rs.getString("id"));
+
+				dto.setName(rs.getString("name"));
+
 				dto.setPostdate(rs.getDate("postdate"));
 				dto.setVisitcount(rs.getInt("visitcount"));
-				dto.setBoardType(rs.getString("boardType"));
-				dto.setName(rs.getString("name"));
-				dto.setLikeCount(rs.getInt("likeCount"));
+				dto.setLikeCount(rs.getInt("likecount"));
+				dto.setBoardType((String) map.get("boardType"));
 
-				// 자료실일 경우에만 fileName을 DTO에 설정 (DB 구조에 따라)
-				if (this.tableName.equals("board_data") || rs.getString("fileName") != null) {
-					dto.setFileName(rs.getString("fileName"));
-				} else {
-					dto.setFileName(null);
+				if (tableName.contains("DATA")) {
+					dto.setFileName(rs.getString("filename"));
 				}
 
 				boardList.add(dto);
 			}
 		} catch (Exception e) {
-			System.out.println("게시물 목록(페이징) 조회 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 게시물 목록 조회 중 예외 발생");
 			e.printStackTrace();
 		}
 
 		return boardList;
 	}
 
-	// 4. 게시물 상세 내용을 반환합니다.
+	public int insertWrite(BoardDTO dto) {
+		int result = 0;
+
+		String query = "INSERT INTO " + tableName + " (num, title, content, id, name, visitcount, likecount) "
+				+ " VALUES (SEQ_" + tableName + ".NEXTVAL, ?, ?, ?, ?, 0, 0)";
+
+		if (tableName.contains("DATA")) {
+			query = "INSERT INTO " + tableName + " (num, title, content, id, name, filename, visitcount, likecount) "
+					+ " VALUES (SEQ_" + tableName + ".NEXTVAL, ?, ?, ?, ?, ?, 0, 0)";
+		}
+
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, dto.getTitle());
+			psmt.setString(2, dto.getContent());
+			psmt.setString(3, dto.getId());
+			psmt.setString(4, dto.getName());
+
+			if (tableName.contains("DATA")) {
+				psmt.setString(5, dto.getFileName());
+			}
+
+			result = psmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println(tableName + " 게시물 등록 중 SQL 예외 발생");
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println(tableName + " 게시물 등록 중 예외 발생");
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	public void updateVisitCount(String num) {
+		String query = "UPDATE " + tableName + " SET visitcount = visitcount + 1 WHERE num=?";
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, num);
+			psmt.executeUpdate();
+		} catch (Exception e) {
+			System.out.println(tableName + " 게시물 조회수 증가 중 예외 발생");
+			e.printStackTrace();
+		}
+	}
+
 	public BoardDTO selectView(String num) {
 		BoardDTO dto = new BoardDTO();
-
-		// DTO에 name 필드가 있으므로, 작성자 이름을 얻기 위해 member 테이블과 JOIN 합니다.
-		String query = "SELECT B.*, M.name " + " FROM " + tableName + " B JOIN member M ON B.id=M.id " + " WHERE num=?";
+		// B.name 대신 M.name(member_name)을 사용하여 ID가 아닌 이름 필드를 가져옴
+		String query = "SELECT B.*, M.name AS member_name FROM " + tableName + " B "
+				+ " INNER JOIN member M ON B.id = M.id " + " WHERE num=?";
 
 		try {
 			psmt = con.prepareStatement(query);
@@ -116,80 +168,41 @@ public class BoardDAO extends JDBConnect {
 				dto.setId(rs.getString("id"));
 				dto.setPostdate(rs.getDate("postdate"));
 				dto.setVisitcount(rs.getInt("visitcount"));
-				dto.setBoardType(rs.getString("boardType"));
-				// M.name 대신 B.name을 사용 (BOARD 테이블에 name 필드가 있으므로)
-				dto.setName(rs.getString("B.name"));
-				dto.setLikeCount(rs.getInt("likeCount"));
+				dto.setLikeCount(rs.getInt("likecount"));
+				// 상세 보기에서는 member 테이블과 JOIN한 별칭 member_name을 사용
+				dto.setName(rs.getString("member_name"));
 
-				if (this.tableName.equals("board_data") || rs.getString("fileName") != null) {
-					dto.setFileName(rs.getString("fileName"));
-				} else {
-					dto.setFileName(null);
+				if (tableName.contains("DATA")) {
+					dto.setFileName(rs.getString("filename"));
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("게시물 상세 보기 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 게시물 상세보기 중 예외 발생");
 			e.printStackTrace();
 		}
-
 		return dto;
 	}
 
-	// 5. 게시물 조회수를 증가시킵니다.
-	public void updateVisitCount(String num) {
-		String query = "UPDATE " + tableName + " SET visitcount=visitcount+1 " + " WHERE num=?";
-
+	public int deletePost(String num) {
+		int result = 0;
+		String query = "DELETE FROM " + tableName + " WHERE num=?";
 		try {
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, num);
-			psmt.executeUpdate();
-		} catch (Exception e) {
-			// System.out.println("게시물 조회수 증가 중 예외 발생");
-			// e.printStackTrace();
-		}
-	}
-
-	// 6. 새로운 게시물을 등록합니다.
-	public int insertWrite(BoardDTO dto) {
-		int result = 0;
-
-		// 쿼리에 tableName을 적용합니다.
-		String query = "INSERT INTO " + tableName + " ( " + " num, title, content, id, boardType, name, fileName ) "
-				+ " VALUES ( " + " (SELECT NVL(MAX(num), 0) + 1 FROM " + tableName + "), " + " ?, ?, ?, ?, ?, ?)";
-
-		try {
-			psmt = con.prepareStatement(query);
-			psmt.setString(1, dto.getTitle());
-			psmt.setString(2, dto.getContent());
-			psmt.setString(3, dto.getId());
-			psmt.setString(4, dto.getBoardType());
-			psmt.setString(5, dto.getName());
-
-			String fileName = dto.getFileName();
-			// 자료실이 아니거나 파일명이 null인 경우 빈 문자열 또는 null로 처리
-			if (!this.tableName.equals("board_data") || fileName == null) {
-				fileName = null;
-			}
-			psmt.setString(6, fileName);
-
 			result = psmt.executeUpdate();
 		} catch (Exception e) {
-			System.out.println("게시물 등록 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 게시물 삭제 중 예외 발생");
 			e.printStackTrace();
 		}
-
 		return result;
 	}
 
-	// 7. 게시물을 수정합니다.
 	public int updateEdit(BoardDTO dto) {
 		int result = 0;
+		String query = "UPDATE " + tableName + " SET title=?, content=?";
 
-		String query = "UPDATE " + tableName + " SET " + " title=?, content=?";
-
-		// 자료실일 경우에만 fileName 필드 수정 구문을 추가합니다.
-		if (this.tableName.equals("board_data")) {
-			query += ", fileName=?";
+		if (dto.getBoardType() != null && dto.getBoardType().equals("data")) {
+			query += ", filename=?";
 		}
 
 		query += " WHERE num=? AND id=?";
@@ -200,7 +213,7 @@ public class BoardDAO extends JDBConnect {
 			psmt.setString(2, dto.getContent());
 
 			int index = 3;
-			if (this.tableName.equals("board_data")) {
+			if (dto.getBoardType() != null && dto.getBoardType().equals("data")) {
 				psmt.setString(index++, dto.getFileName());
 			}
 
@@ -209,43 +222,23 @@ public class BoardDAO extends JDBConnect {
 
 			result = psmt.executeUpdate();
 		} catch (Exception e) {
-			System.out.println("게시물 수정 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 게시물 수정 중 예외 발생");
 			e.printStackTrace();
 		}
-
 		return result;
 	}
 
-	// 8. 게시물을 삭제합니다.
-	public int deletePost(String num) {
+	public int updateLikeCount(String num) {
 		int result = 0;
-
-		String query = "DELETE FROM " + tableName + " WHERE num=?";
-
+		String query = "UPDATE " + tableName + " SET likecount = likecount + 1 WHERE num=?";
 		try {
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, num);
-
 			result = psmt.executeUpdate();
 		} catch (Exception e) {
-			System.out.println("게시물 삭제 중 예외 발생 (tableName: " + tableName + ")");
+			System.out.println(tableName + " 좋아요 증가 중 예외 발생");
 			e.printStackTrace();
 		}
-
 		return result;
-	}
-
-	// 9. 좋아요 수 증가
-	public void updateLikeCount(String num) {
-		String query = "UPDATE " + tableName + " SET likeCount=likeCount+1 " + " WHERE num=?";
-
-		try {
-			psmt = con.prepareStatement(query);
-			psmt.setString(1, num);
-			psmt.executeUpdate();
-		} catch (Exception e) {
-			System.out.println("좋아요 수 증가 중 예외 발생 (tableName: " + tableName + ")");
-			e.printStackTrace();
-		}
 	}
 }

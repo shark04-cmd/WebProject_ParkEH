@@ -89,6 +89,11 @@
 		<url-pattern>/member/edit.do</url-pattern>
 	</servlet-mapping>
 
+	<servlet-mapping>
+		<servlet-name>EditController</servlet-name>
+		<url-pattern>/board/edit.do</url-pattern>
+	</servlet-mapping>
+
 	<servlet>
 		<servlet-name>ListController</servlet-name>
 		<servlet-class>controller.board.ListController</servlet-class>
@@ -114,6 +119,24 @@
 	<servlet-mapping>
 		<servlet-name>WriteController</servlet-name>
 		<url-pattern>/board/write.do</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>DeleteController</servlet-name>
+		<servlet-class>controller.board.DeleteController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>DeleteController</servlet-name>
+		<url-pattern>/board/delete.do</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>DownloadController</servlet-name>
+		<servlet-class>controller.board.DownloadController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>DownloadController</servlet-name>
+		<url-pattern>/board/download.do</url-pattern>
 	</servlet-mapping>
 
 </web-app>

@@ -14,7 +14,7 @@ if (successMessage != null) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>로그인 - WevProject_PaekEH</title>
+<title>로그인 - WevProject_ParkEH</title>
 <style>
 /* ... (스타일 생략) ... */
 body {
@@ -191,7 +191,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<a href="<%=contextPath%>/member/login.do">로그인</a> <a

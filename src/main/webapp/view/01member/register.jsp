@@ -3,12 +3,19 @@
 <%
 String contextPath = request.getContextPath();
 String errorMessage = (String) request.getAttribute("RegisterErrorMessage");
+
+// 입력 값 유지 (오류 발생 시)
+String id = (String) request.getAttribute("id");
+String name = (String) request.getAttribute("name");
+String email = (String) request.getAttribute("email");
+String phone = (String) request.getAttribute("phone");
+
 %>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>회원가입 - WevProject_PaekEH</title>
+<title>회원가입 - WevProject_ParkEH</title>
 <style>
 /* ... (기존 스타일 유지) ... */
 body {
@@ -190,7 +197,6 @@ body {
     let isIdDuplicated = true; 
     let idCheckXhr = null; 
     
-    // 이전에 정의했던 ALLOWED_DOMAINS 리스트 제거 (모든 도메인 허용)
 
 	/**
 	 * 숫자만 허용하고, 4번째와 9번째에 하이픈(-)을 자동으로 추가합니다. (전화번호)
@@ -218,7 +224,7 @@ body {
 	}
 
     /**
-     * [수정] 이메일 형식 검사: @와 . 포함 여부만 간단하게 검사합니다. (모든 도메인 허용)
+     * 이메일 형식 검사
      */
     function validateEmailFormat() {
         const emailField = document.getElementById('email');
@@ -232,29 +238,23 @@ body {
             return true;
         }
         
-        // ★★★ 핵심 수정: @와 .이 모두 포함되어 있는지 확인하는 기본 형식만 검사 ★★★
         const atIndex = emailValue.indexOf('@');
-        const dotIndex = emailValue.lastIndexOf('.'); // 마지막 .의 위치 확인 (도메인 형식에 유리)
+        const dotIndex = emailValue.lastIndexOf('.'); 
 
-        // 1. @가 없거나, .이 없거나, @가 맨 앞이거나, @가 .보다 뒤에 있거나, .이 맨 뒤인 경우 등
         if (atIndex === -1 || dotIndex === -1 || atIndex === 0 || atIndex >= dotIndex) {
             emailMessage.textContent = '이메일 형식으로 만들어주세요! (예: user@domain.com)';
             emailMessage.className = 'validation-message error';
-            emailField.focus(); 
             return false;
         }
         
-        // 2. 도메인 부분이 최소 2글자 이상인지 확인 (예: .co, .kr, .com)
         const domainPart = emailValue.substring(dotIndex + 1);
         if (domainPart.length < 2) {
              emailMessage.textContent = '유효한 이메일 형식(도메인)이 아닙니다.';
              emailMessage.className = 'validation-message error';
-             emailField.focus(); 
              return false;
         }
 
 
-        // 모든 검사 통과 (모든 유효한 형식의 도메인 허용)
         return true;
     }
 
@@ -264,19 +264,29 @@ body {
 	 */
 	function validateForm() {
 		
-        // 0. 폼 제출 시 최종 이메일 형식 검사
+		// 1. 패스워드 일치 확인
+		const passField = document.getElementById('pass');
+		const passConfirmField = document.getElementById('passConfirm');
+		
+		if (passField.value !== passConfirmField.value) {
+			alert('입력하신 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+			passField.focus();
+			return false;
+		}
+		
+        // 2. 최종 이메일 형식 검사
         if (!validateEmailFormat()) {
             return false;
         }
         
-		// 1. 아이디 중복 상태 확인
+		// 3. 아이디 중복 상태 확인
         if (isIdDuplicated) {
-            alert('사용할 수 없는 아이디입니다. 다시 확인해 주세요.');
+            alert('사용할 수 없는 아이디입니다. 아이디 중복 확인을 다시 해주세요.');
             document.getElementById('id').focus();
             return false;
         }
 		
-		// 2. 전화번호 유효성 검사
+		// 4. 전화번호 유효성 검사
         const phoneField = document.getElementById('phone');
         const phoneValue = phoneField.value.replace(/[^0-9]/g, ""); 
         
@@ -358,7 +368,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<a href="<%=contextPath%>/member/login.do">로그인</a> <a
@@ -396,21 +406,25 @@ body {
 
 					<label for="id">아이디</label> <input type="text" id="id" name="id"
 						required placeholder="아이디" maxlength="20"
-						value="<%=(request.getParameter("id") != null) ? request.getParameter("id") : ""%>"
-						oninput="checkIdDuplication()"> <span id="idMessage"
-						class="validation-message info">아이디는 최소 4자 이상 입력해야 확인됩니다.</span> <label
-						for="pass">패스워드</label> <input type="password" id="pass"
-						name="pass" required placeholder="비밀번호" maxlength="20"> <label
-						for="name">이름</label> <input type="text" id="name" name="name"
-						required placeholder="이름" maxlength="30"> <label
+						value="<%=id != null ? id : ""%>" oninput="checkIdDuplication()">
+					<span id="idMessage" class="validation-message info">아이디는 최소
+						4자 이상 입력해야 확인됩니다.</span> <label for="pass">패스워드</label> <input
+						type="password" id="pass" name="pass" required placeholder="비밀번호"
+						maxlength="20"> <label for="passConfirm">패스워드 확인</label> <input
+						type="password" id="passConfirm" name="passConfirm" required
+						placeholder="비밀번호 확인" maxlength="20"> <label for="name">이름</label>
+					<input type="text" id="name" name="name" required placeholder="이름"
+						maxlength="30" value="<%=name != null ? name : ""%>"> <label
 						for="email">이메일</label> <input type="email" id="email"
 						name="email" required placeholder="example@domain.com"
-						maxlength="100" onblur="validateEmailFormat()"> <span
+						maxlength="100" onblur="validateEmailFormat()"
+						value="<%=email != null ? email : ""%>"> <span
 						id="emailMessage" class="validation-message"></span> <label
 						for="phone">전화번호</label> <input type="tel" id="phone" name="phone"
 						required placeholder="010-1234-5678"
-						oninput="formatPhoneNumber(this)"> <input type="submit"
-						value="회원가입 완료">
+						oninput="formatPhoneNumber(this)"
+						value="<%=phone != null ? phone : ""%>"> <input
+						type="submit" value="회원가입 완료">
 				</form>
 				<a href="<%=contextPath%>/member/login.do" class="login-link">이미
 					회원이신가요? 로그인</a>

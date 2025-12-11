@@ -21,7 +21,7 @@ if ("free".equals(boardType)) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title><%=boardName%> 글쓰기 - WevProject_PaekEH</title>
+<title><%=boardName%> 글쓰기 - WevProject_ParkEH</title>
 <style>
 /* (스타일은 그대로 유지) */
 body {
@@ -212,8 +212,7 @@ body {
 	}
 	
 	function goBack() {
-		// 이제 목록 페이지로 이동합니다.
-		// **수정 완료**: URL 문자열을 한 줄에서 올바르게 닫았습니다.
+		// 목록 페이지로 이동합니다.
 		window.location.href = "<%=contextPath%>/board/list.do?boardType=<%=boardType%>
 	";
 	}
@@ -224,7 +223,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<%
@@ -235,8 +234,8 @@ body {
 			<%
 			} else {
 			%>
-			<a href="<%=contextPath%>/view/01member/register.jsp">회원가입</a> <a
-				href="<%=contextPath%>/member/login.do">로그인</a>
+			<a href="<%=contextPath%>/member/login.do">로그인</a> <a
+				href="<%=contextPath%>/member/register.do">회원가입</a>
 			<%
 			}
 			%>

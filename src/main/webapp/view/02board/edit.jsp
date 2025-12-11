@@ -31,7 +31,7 @@ if (dto == null) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title><%=boardName%> 수정 - WevProject_PaekEH</title>
+<title><%=boardName%> 수정 - WevProject_ParkEH</title>
 <style>
 /* 으녀기님의 스타일 가이드라인을 따릅니다. */
 body {
@@ -232,7 +232,7 @@ body {
 	<div class="header">
 		<div class="header-left">
 			<a href="<%=contextPath%>/Default.jsp"
-				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
+				style="color: white; text-decoration: none;">WevProject_ParkEH</a>
 		</div>
 		<div class="header-right">
 			<a href="<%=contextPath%>/member/edit.do">회원정보수정</a> <a

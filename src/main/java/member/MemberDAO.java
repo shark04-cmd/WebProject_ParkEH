@@ -14,7 +14,8 @@ public class MemberDAO extends JDBConnect {
 	// 1. 로그인 시도
 	public MemberDTO getMemberDTO(String uid, String upass) {
 		MemberDTO dto = null;
-		String query = "SELECT * FROM member WHERE id=? AND pass=?";
+		// ⚠️ 수정: email, phone 필드 추가
+		String query = "SELECT id, pass, name, email, phone, regidate FROM member WHERE id=? AND pass=?";
 
 		try {
 			psmt = con.prepareStatement(query);
@@ -28,6 +29,8 @@ public class MemberDAO extends JDBConnect {
 				dto.setPass(rs.getString("pass"));
 				dto.setName(rs.getString("name"));
 				dto.setRegidate(rs.getDate("regidate"));
+				dto.setEmail(rs.getString("email")); // ⚠️ 추가
+				dto.setPhone(rs.getString("phone")); // ⚠️ 추가
 			}
 		} catch (Exception e) {
 			System.out.println("로그인 멤버 조회 중 예외 발생");
@@ -40,7 +43,8 @@ public class MemberDAO extends JDBConnect {
 	// 2. ID로 회원 정보 조회 (글쓰기, 정보 수정 등에 사용)
 	public MemberDTO getMemberDTO(String uid) {
 		MemberDTO dto = null;
-		String query = "SELECT * FROM member WHERE id=?";
+		// ⚠️ 수정: email, phone 필드 추가
+		String query = "SELECT id, pass, name, email, phone, regidate FROM member WHERE id=?";
 
 		try {
 			psmt = con.prepareStatement(query);
@@ -53,6 +57,8 @@ public class MemberDAO extends JDBConnect {
 				dto.setPass(rs.getString("pass"));
 				dto.setName(rs.getString("name"));
 				dto.setRegidate(rs.getDate("regidate"));
+				dto.setEmail(rs.getString("email")); // ⚠️ 추가
+				dto.setPhone(rs.getString("phone")); // ⚠️ 추가
 			}
 		} catch (Exception e) {
 			System.out.println("멤버 정보 조회 중 예외 발생");
@@ -64,14 +70,17 @@ public class MemberDAO extends JDBConnect {
 	// 3. 회원 가입
 	public int insertMember(MemberDTO dto) {
 		int result = 0;
+		// ⚠️ 수정: email, phone 필드 추가
 		// regidate는 DB의 기본값(sysdate) 사용
-		String query = "INSERT INTO member (id, pass, name) VALUES (?, ?, ?)";
+		String query = "INSERT INTO member (id, pass, name, email, phone) VALUES (?, ?, ?, ?, ?)";
 
 		try {
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, dto.getId());
 			psmt.setString(2, dto.getPass());
 			psmt.setString(3, dto.getName());
+			psmt.setString(4, dto.getEmail()); // ⚠️ 추가
+			psmt.setString(5, dto.getPhone()); // ⚠️ 추가
 
 			result = psmt.executeUpdate();
 		} catch (SQLException e) {
@@ -110,16 +119,19 @@ public class MemberDAO extends JDBConnect {
 	// 5. 회원 정보 수정
 	public int updateMember(MemberDTO dto) {
 		int result = 0;
-		// 이름은 필수 수정, 비밀번호는 입력했을 때만 수정 (Oracle NVL 사용)
-		String query = "UPDATE member SET name=?, pass=NVL(?, pass) WHERE id=? AND pass=?";
+		// 이름, 이메일, 전화번호는 필수 수정, 비밀번호는 입력했을 때만 수정 (Oracle NVL 사용)
+		// ⚠️ 수정: email, phone 필드 추가
+		String query = "UPDATE member SET name=?, email=?, phone=?, pass=NVL(?, pass) WHERE id=? AND pass=?";
 
 		try {
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, dto.getName());
+			psmt.setString(2, dto.getEmail()); // ⚠️ 추가
+			psmt.setString(3, dto.getPhone()); // ⚠️ 추가
 			// 패스워드가 빈 문자열/null이면 NVL에 의해 기존 pass 유지
-			psmt.setString(2, dto.getNewPass() != null && !dto.getNewPass().isEmpty() ? dto.getNewPass() : null);
-			psmt.setString(3, dto.getId());
-			psmt.setString(4, dto.getPass()); // 현재 비밀번호로 인증
+			psmt.setString(4, dto.getNewPass() != null && !dto.getNewPass().isEmpty() ? dto.getNewPass() : null);
+			psmt.setString(5, dto.getId());
+			psmt.setString(6, dto.getPass()); // 현재 비밀번호로 인증
 
 			result = psmt.executeUpdate();
 		} catch (Exception e) {
