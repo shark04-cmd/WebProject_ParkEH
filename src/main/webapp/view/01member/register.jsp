@@ -10,7 +10,7 @@ String errorMessage = (String) request.getAttribute("RegisterErrorMessage");
 <meta charset="UTF-8">
 <title>회원가입 - WevProject_PaekEH</title>
 <style>
-/* ... (스타일 생략 - 변경 없음) ... */
+/* ... (기존 스타일 유지) ... */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
@@ -133,26 +133,6 @@ body {
 	box-sizing: border-box;
 }
 
-.phone-group { /* 전화번호 필드 그룹을 위한 CSS 추가 */
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 8px;
-}
-
-.phone-group input {
-	width: calc(33% - 15px); /* 필드 너비 조정 */
-	padding: 8px 4px; /* 패딩 조정 */
-	text-align: center;
-}
-
-.phone-separator {
-	font-size: 1.2em;
-	font-weight: bold;
-	color: #555;
-	margin: 0 5px;
-}
-
 .register-form-box input[type="submit"] {
 	width: 100%;
 	padding: 10px;
@@ -187,123 +167,150 @@ body {
 	margin-bottom: 15px;
 	text-align: center;
 }
+
+/* 메시지 표시 스타일 */
+.validation-message {
+	font-size: 0.9em;
+	margin-bottom: 5px;
+	display: block;
+}
+
+.validation-message.error {
+	color: red;
+	font-weight: bold;
+}
+
+.validation-message.info {
+	color: gray;
+}
 </style>
 
 <script>
 	// 전역 변수로 아이디 중복 상태를 저장합니다.
-    let isIdDuplicated = true; // 초기값은 중복 또는 사용 불가 상태로 설정하여 확인 전에 가입 방지
+    let isIdDuplicated = true; 
     let idCheckXhr = null; 
+    
+    // 이전에 정의했던 ALLOWED_DOMAINS 리스트 제거 (모든 도메인 허용)
 
 	/**
-	 * 전화번호 입력 필드 간 자동 포커스 이동 및 숫자만 입력 허용
-	 * @param {HTMLInputElement} currentField 현재 입력 필드
-	 * @param {number} maxLength 현재 필드의 최대 길이
-	 * @param {string} nextId 다음으로 이동할 필드의 ID (없으면 null)
+	 * 숫자만 허용하고, 4번째와 9번째에 하이픈(-)을 자동으로 추가합니다. (전화번호)
 	 */
-	function autoMove(currentField, maxLength, nextId) {
+	function formatPhoneNumber(currentField) {
 		
-		// 1. 숫자 외의 문자 제거 (혹시 type=tel이 아닌 다른 타입으로 복붙된 경우 대비)
-		currentField.value = currentField.value.replace(/[^0-9]/g, "");
+		let number = currentField.value.replace(/[^0-9]/g, "");
 
-		// 2. 최대 길이와 현재 입력 길이를 비교하여 포커스 이동
-		// oninput 이벤트는 문자열이 변경될 때마다 발생
-		if (currentField.value.length === maxLength) {
-			
-			if (nextId) {
-				const nextField = document.getElementById(nextId);
-				if (nextField) {
-					nextField.focus(); // 다음 필드로 포커스 이동
-				}
-			}
-		}
-	}
-	
-	/**
-	 * 키 누름 시 숫자만 입력되도록 처리
-	 * @param {KeyboardEvent} event
-	 */
-	function isNumberKey(event) {
-		const charCode = (event.which) ? event.which : event.keyCode;
-		// 0-9 숫자 범위 (48-57), 백스페이스(8), 탭(9), 엔터(13), 화살표(37-40) 등 허용
-		if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-			// 숫자 외의 문자는 입력 방지
-			event.preventDefault(); 
-			return false;
-		}
-		return true;
+		if (number.length > 11) {
+            number = number.substring(0, 11);
+        }
+
+        let formattedNumber = '';
+        
+        if (number.length > 3 && number.length <= 7) {
+            formattedNumber = number.substring(0, 3) + '-' + number.substring(3);
+        } else if (number.length > 7) {
+            formattedNumber = number.substring(0, 3) + '-' + number.substring(3, 7) + '-' + number.substring(7);
+        } else {
+            formattedNumber = number;
+        }
+
+        currentField.value = formattedNumber;
+        currentField.maxLength = 13;
 	}
 
+    /**
+     * [수정] 이메일 형식 검사: @와 . 포함 여부만 간단하게 검사합니다. (모든 도메인 허용)
+     */
+    function validateEmailFormat() {
+        const emailField = document.getElementById('email');
+        const emailMessage = document.getElementById('emailMessage');
+        const emailValue = emailField.value.trim();
+
+        emailMessage.textContent = ''; // 메시지 초기화
+        emailMessage.className = 'validation-message';
+
+        if (emailValue === '') {
+            return true;
+        }
+        
+        // ★★★ 핵심 수정: @와 .이 모두 포함되어 있는지 확인하는 기본 형식만 검사 ★★★
+        const atIndex = emailValue.indexOf('@');
+        const dotIndex = emailValue.lastIndexOf('.'); // 마지막 .의 위치 확인 (도메인 형식에 유리)
+
+        // 1. @가 없거나, .이 없거나, @가 맨 앞이거나, @가 .보다 뒤에 있거나, .이 맨 뒤인 경우 등
+        if (atIndex === -1 || dotIndex === -1 || atIndex === 0 || atIndex >= dotIndex) {
+            emailMessage.textContent = '이메일 형식으로 만들어주세요! (예: user@domain.com)';
+            emailMessage.className = 'validation-message error';
+            emailField.focus(); 
+            return false;
+        }
+        
+        // 2. 도메인 부분이 최소 2글자 이상인지 확인 (예: .co, .kr, .com)
+        const domainPart = emailValue.substring(dotIndex + 1);
+        if (domainPart.length < 2) {
+             emailMessage.textContent = '유효한 이메일 형식(도메인)이 아닙니다.';
+             emailMessage.className = 'validation-message error';
+             emailField.focus(); 
+             return false;
+        }
+
+
+        // 모든 검사 통과 (모든 유효한 형식의 도메인 허용)
+        return true;
+    }
+
 
 	/**
-	 * 폼 제출 전에 3개 필드의 값을 조합하여 숨겨진 필드(name="phone")에 저장
+	 * 폼 제출 유효성 검사
 	 */
-	function combinePhoneNumber() {
+	function validateForm() {
 		
-        // ★★★ [로그 강제 출력] 함수 시작 지점 확인 (디버깅 목적)
-        console.log("combinePhoneNumber function started."); 
+        // 0. 폼 제출 시 최종 이메일 형식 검사
+        if (!validateEmailFormat()) {
+            return false;
+        }
         
-		const p1 = document.getElementById('phone1').value;
-		const p2 = document.getElementById('phone2').value;
-		const p3 = document.getElementById('phone3').value;
-		const combinedInput = document.getElementById('phone');
-
-		// 1. 전화번호 조합
-		// 모든 필드가 비어있지 않은 경우에만 조합하여 전송합니다.
-		if (p1 && p2 && p3 && p1.length === 3 && p2.length === 4 && p3.length === 4) {
-			combinedInput.value = `${p1}-${p2}-${p3}`;
-		} else {
-			combinedInput.value = "";
-		}
-        
-        // 2. [디버깅 로그] 숨겨진 필드의 값 확인
-        console.log("Combine Phone Result (Client Side): " + combinedInput.value); 
-
-
-		// 3. 필수 필드 유효성 검사 (required가 없으므로 여기서 수동 체크)
-		if (!combinedInput.value) {
-			alert('전화번호를 올바르게 입력해주세요. (3-4-4 자리)');
-			document.getElementById('phone1').focus();
-			// return false; // 제출 방지
-		}
-		
-		// 4. 아이디 중복 상태 확인
+		// 1. 아이디 중복 상태 확인
         if (isIdDuplicated) {
             alert('사용할 수 없는 아이디입니다. 다시 확인해 주세요.');
             document.getElementById('id').focus();
-            // return false;
+            return false;
         }
 		
-		// ★★★ 폼 제출을 일시적으로 중단하여 로그를 확인할 수 있도록 합니다. ★★★
-        console.log("!!! 폼 제출 중단됨: 로그를 확인하세요 !!!");
-        return false; 
+		// 2. 전화번호 유효성 검사
+        const phoneField = document.getElementById('phone');
+        const phoneValue = phoneField.value.replace(/[^0-9]/g, ""); 
+        
+        if (phoneValue.length > 0 && (phoneValue.length < 10 || phoneValue.length > 11)) {
+             alert('전화번호를 올바르게 입력해주세요. (10자리 또는 11자리)');
+             phoneField.focus();
+             return false;
+        }
+        
+		return true; // 제출 허용
 	}
 	
 	/**
      * 아이디 중복을 AJAX로 확인하고 결과를 화면에 표시합니다.
-     * oninput 이벤트로 실시간 실행됩니다.
      */
     function checkIdDuplication() {
         const idField = document.getElementById('id');
         const idMessage = document.getElementById('idMessage');
         const idValue = idField.value.trim();
         
-        // 입력 값이 비어있거나 너무 짧으면 (4자 미만) 메시지 초기화 및 가입 방지
         if (idValue.length < 4) {
             idMessage.textContent = '아이디는 최소 4자 이상 입력해야 확인됩니다.';
-            idMessage.style.color = 'gray';
-            isIdDuplicated = true; // 짧은 상태는 중복/사용 불가로 간주
+            idMessage.className = 'validation-message info';
+            isIdDuplicated = true; 
             return;
         }
 
-        // 이전 AJAX 요청이 있다면 취소합니다
         if (idCheckXhr && idCheckXhr.readyState !== 4) {
             idCheckXhr.abort();
         }
         
         idMessage.textContent = '확인 중...';
-        idMessage.style.color = 'orange';
+        idMessage.className = 'validation-message info';
 
-        // AJAX 요청
         const xhr = new XMLHttpRequest();
         idCheckXhr = xhr;
         const url = '<%=contextPath%>/member/idcheck.do'; 
@@ -312,41 +319,36 @@ body {
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
         xhr.onreadystatechange = function() {
-            // 요청이 취소되지 않고, 완료되었는지 확인
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         
-                        // 결과에 따라 메시지 표시
                         idMessage.textContent = response.message;
                         if (response.isDuplicated) {
-                            // 중복인 경우: 빨간색
-                            idMessage.style.color = 'red';
+                            idMessage.className = 'validation-message error';
                             isIdDuplicated = true; 
                         } else {
-                            // 사용 가능한 경우: 파란색/초록색
                             idMessage.style.color = 'blue'; 
+                            idMessage.className = 'validation-message'; 
                             isIdDuplicated = false; 
                         }
                     } catch (e) {
                         console.error("JSON 파싱 오류:", e);
                         idMessage.textContent = '통신 오류 발생.';
-                        idMessage.style.color = 'red';
+                        idMessage.className = 'validation-message error';
                         isIdDuplicated = true; 
                     }
                 } else {
-                     // 404, 500 등의 서버 오류
                      if (xhr.status !== 0) {
                         idMessage.textContent = '서버 통신 실패 (' + xhr.status + ')';
-                        idMessage.style.color = 'red';
+                        idMessage.className = 'validation-message error';
                         isIdDuplicated = true; 
                     }
                 }
             }
         };
     
-        // 데이터 전송
         xhr.send('id=' + encodeURIComponent(idValue));
     }
 </script>
@@ -390,37 +392,25 @@ body {
 
 			<div class="register-form-box">
 				<form action="<%=contextPath%>/member/register.do" method="post"
-					onsubmit="return combinePhoneNumber()">
+					onsubmit="return validateForm()">
 
-					<input type="hidden" id="phone" name="phone"> <label
-						for="id">아이디</label> <input type="text" id="id" name="id" required
-						placeholder="아이디" maxlength="20"
+					<label for="id">아이디</label> <input type="text" id="id" name="id"
+						required placeholder="아이디" maxlength="20"
 						value="<%=(request.getParameter("id") != null) ? request.getParameter("id") : ""%>"
 						oninput="checkIdDuplication()"> <span id="idMessage"
-						style="font-size: 0.9em; margin-bottom: 5px; display: block; color: gray;">아이디는
-						최소 4자 이상 입력해야 확인됩니다.</span> <label for="pass">패스워드</label> <input
-						type="password" id="pass" name="pass" required placeholder="비밀번호"
-						maxlength="20"> <label for="name">이름</label> <input
-						type="text" id="name" name="name" required placeholder="이름"
-						maxlength="30"> <label for="email">이메일</label> <input
-						type="email" id="email" name="email" required
-						placeholder="example@domain.com" maxlength="100"> <label
-						for="phone1">전화번호 (3-4-4 자리)</label>
-					<div class="phone-group">
-						<input type="tel" id="phone1" maxlength="3" required
-							placeholder="010" oninput="autoMove(this, 3, 'phone2')"
-							onkeypress="return isNumberKey(event)"> <span
-							class="phone-separator">-</span> <input type="tel" id="phone2"
-							maxlength="4" required placeholder="0000"
-							oninput="autoMove(this, 4, 'phone3')"
-							onkeypress="return isNumberKey(event)"> <span
-							class="phone-separator">-</span> <input type="tel" id="phone3"
-							maxlength="4" required placeholder="0000"
-							oninput="autoMove(this, 4, null)"
-							onkeypress="return isNumberKey(event)">
-					</div>
-
-					<input type="submit" value="회원가입 완료">
+						class="validation-message info">아이디는 최소 4자 이상 입력해야 확인됩니다.</span> <label
+						for="pass">패스워드</label> <input type="password" id="pass"
+						name="pass" required placeholder="비밀번호" maxlength="20"> <label
+						for="name">이름</label> <input type="text" id="name" name="name"
+						required placeholder="이름" maxlength="30"> <label
+						for="email">이메일</label> <input type="email" id="email"
+						name="email" required placeholder="example@domain.com"
+						maxlength="100" onblur="validateEmailFormat()"> <span
+						id="emailMessage" class="validation-message"></span> <label
+						for="phone">전화번호</label> <input type="tel" id="phone" name="phone"
+						required placeholder="010-1234-5678"
+						oninput="formatPhoneNumber(this)"> <input type="submit"
+						value="회원가입 완료">
 				</form>
 				<a href="<%=contextPath%>/member/login.do" class="login-link">이미
 					회원이신가요? 로그인</a>

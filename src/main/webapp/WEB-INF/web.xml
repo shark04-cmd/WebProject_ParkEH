@@ -31,6 +31,15 @@
 		<param-value>1234</param-value>
 	</context-param>
 
+	<context-param>
+		<param-name>POSTS_PER_PAGE</param-name>
+		<param-value>10</param-value>
+	</context-param>
+	<context-param>
+		<param-name>PAGES_PER_BLOCK</param-name>
+		<param-value>5</param-value>
+	</context-param>
+
 	<session-config>
 		<session-timeout>25</session-timeout>
 	</session-config>
@@ -71,13 +80,40 @@
 		<url-pattern>/member/logout.do</url-pattern>
 	</servlet-mapping>
 
-	<context-param>
-		<param-name>POSTS_PER_PAGE</param-name>
-		<param-value>10</param-value>
-	</context-param>
-	<context-param>
-		<param-name>PAGES_PER_BLOCK</param-name>
-		<param-value>5</param-value>
-	</context-param>
+	<servlet>
+		<servlet-name>EditController</servlet-name>
+		<servlet-class>controller.EditController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>EditController</servlet-name>
+		<url-pattern>/member/edit.do</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>ListController</servlet-name>
+		<servlet-class>controller.board.ListController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ListController</servlet-name>
+		<url-pattern>/board/list.do</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>ViewController</servlet-name>
+		<servlet-class>controller.board.ViewController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ViewController</servlet-name>
+		<url-pattern>/board/view.do</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>WriteController</servlet-name>
+		<servlet-class>controller.board.WriteController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>WriteController</servlet-name>
+		<url-pattern>/board/write.do</url-pattern>
+	</servlet-mapping>
 
 </web-app>

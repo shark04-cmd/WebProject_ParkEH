@@ -7,11 +7,7 @@ String contextPath = request.getContextPath();
 String userId = (String) session.getAttribute("UserID");
 boolean isLoggedIn = (userId != null && !userId.isEmpty());
 
-// [추가] 로그아웃 성공 메시지 확인 및 제거
-String logoutMessage = (String) session.getAttribute("LogoutSuccessMessage");
-if (logoutMessage != null) {
-	session.removeAttribute("LogoutSuccessMessage");
-}
+// [제거 완료] 로그아웃 성공 메시지 확인 및 제거 코드 (logoutMessage 관련)
 %>
 <!DOCTYPE html>
 <html>
@@ -138,18 +134,7 @@ body {
 	font-weight: bold;
 }
 
-/* [추가] 로그아웃 메시지 스타일 */
-.info-message {
-	color: #007bff; /* 파란색 계열 */
-	font-weight: bold;
-	margin-bottom: 25px;
-	padding: 10px;
-	background-color: #e6f0ff;
-	border: 1px solid #007bff;
-	border-radius: 4px;
-	width: 300px; /* 메시지 박스 너비에 맞춤 */
-	text-align: center;
-}
+/* [제거 완료] 로그아웃 메시지 스타일 (.info-message) */
 </style>
 </head>
 <body>
@@ -191,13 +176,7 @@ body {
 
 		<div class="main-content">
 			<%
-			if (logoutMessage != null) {
-			%>
-			<div class="info-message">
-				<%=logoutMessage%>
-			</div>
-			<%
-			}
+			// [제거 완료] 로그아웃 메시지 출력 JSTL/Scriptlet 블록
 			%>
 
 			<div class="message-box">
