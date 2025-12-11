@@ -254,11 +254,19 @@ body {
     }
     
 	/**
-	 * 폼 제출 유효성 검사
+	 * 폼 제출 유효성 검사 (현재 패스워드 필수 입력 포함)
 	 */
 	function validateForm() {
         
-        // 1. 이름은 필수 입력
+        // 1. 현재 패스워드 필수 입력 확인
+        const currentPassField = document.getElementById('currentPass');
+        if (currentPassField.value.trim() === '') {
+        	alert('정보 수정을 위해 현재 비밀번호를 반드시 입력해야 합니다.');
+        	currentPassField.focus();
+        	return false;
+        }
+        
+        // 2. 이름은 필수 입력
         const nameField = document.getElementById('name');
         if (nameField.value.trim() === '') {
         	alert('이름을 입력해주세요.');
@@ -266,12 +274,12 @@ body {
         	return false;
         }
         
-        // 2. 이메일 형식 검사 (빈 값은 통과, 입력 시 형식 검사)
+        // 3. 이메일 형식 검사
         if (!validateEmailFormat()) {
             return false;
         }
         
-		// 3. 전화번호 유효성 검사 (빈 값은 통과, 입력 시 형식 검사)
+		// 4. 전화번호 유효성 검사 (빈 값은 통과, 입력 시 형식 검사)
         const phoneField = document.getElementById('phone');
         const phoneValue = phoneField.value.replace(/[^0-9]/g, ""); 
         
@@ -281,11 +289,11 @@ body {
              return false;
         }
         
-        const passField = document.getElementById('pass');
-        // 4. 비밀번호 입력 시, 최소 4자 이상인지 확인 (입력하지 않으면 기존 비밀번호 유지)
-        if (passField.value.length > 0 && passField.value.length < 4) {
-        	alert('비밀번호를 변경하려면 최소 4자 이상 입력해야 합니다.');
-            passField.focus();
+        const newPassField = document.getElementById('pass');
+        // 5. 새 비밀번호 입력 시, 최소 4자 이상인지 확인 
+        if (newPassField.value.length > 0 && newPassField.value.length < 4) {
+        	alert('새 비밀번호를 변경하려면 최소 4자 이상 입력해야 합니다.');
+            newPassField.focus();
             return false;
         }
         
@@ -354,10 +362,14 @@ body {
 
 					<label for="id">아이디</label> <input type="text" id="id" name="id"
 						value="<%=memberInfo.getId()%>" readonly
-						style="background-color: #eee;"> <label for="pass">새
-						패스워드</label> <input type="password" id="pass" name="pass"
-						placeholder="변경하려면 입력 (최소 4자)" maxlength="20"> <span
-						class="validation-message"
+						style="background-color: #eee;"> <label for="currentPass">현재
+						패스워드 <span style="color: red;">(필수)</span>
+					</label> <input type="password" id="currentPass" name="currentPass"
+						required placeholder="본인 확인을 위해 현재 비밀번호를 입력해주세요" maxlength="20">
+
+					<label for="pass">새 패스워드</label> <input type="password" id="pass"
+						name="pass" placeholder="변경하려면 입력 (최소 4자)" maxlength="20">
+					<span class="validation-message"
 						style="color: gray; font-size: 0.85em; margin-bottom: 15px;">※
 						변경을 원치 않으면 비워두세요.</span> <label for="name">이름</label> <input type="text"
 						id="name" name="name" required placeholder="이름" maxlength="30"
