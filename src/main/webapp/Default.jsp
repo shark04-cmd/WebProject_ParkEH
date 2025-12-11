@@ -7,7 +7,14 @@ String contextPath = request.getContextPath();
 String userId = (String) session.getAttribute("UserID");
 boolean isLoggedIn = (userId != null && !userId.isEmpty());
 
-// [제거 완료] 로그아웃 성공 메시지 확인 및 제거 코드 (logoutMessage 관련)
+// [추가] 로그아웃 성공 메시지를 세션에서 확인하고 가져옵니다.
+String logoutMessage = (String) session.getAttribute("LogoutSuccessMessage");
+
+// [추가] 메시지를 가져왔다면, 바로 세션에서 제거하여 새로고침 시 사라지게 합니다.
+if (logoutMessage != null) {
+	session.removeAttribute("LogoutSuccessMessage");
+}
+
 %>
 <!DOCTYPE html>
 <html>
@@ -116,6 +123,7 @@ body {
 	display: inline-block;
 	background-color: #ffffff;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+	min-width: 300px; /* 메시지 박스 크기 유지 */
 }
 
 .message-box p {
@@ -134,7 +142,17 @@ body {
 	font-weight: bold;
 }
 
-/* [제거 완료] 로그아웃 메시지 스타일 (.info-message) */
+/* [추가] 로그아웃 메시지 전용 스타일 */
+.info-message {
+	background-color: #fff3cd; /* 노란색 계열 배경 */
+	color: #856404;
+	border: 1px solid #ffeeba;
+	padding: 15px 30px;
+	border-radius: 8px;
+	margin-bottom: 20px;
+	font-size: 1.1em;
+	font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -176,7 +194,14 @@ body {
 
 		<div class="main-content">
 			<%
-			// [제거 완료] 로그아웃 메시지 출력 JSTL/Scriptlet 블록
+			// [추가] 로그아웃 메시지 출력
+			if (logoutMessage != null) {
+			%>
+			<div class="info-message">
+				<%=logoutMessage%>
+			</div>
+			<%
+			}
 			%>
 
 			<div class="message-box">
@@ -184,7 +209,7 @@ body {
 				if (isLoggedIn) {
 				%>
 				<p>
-					**<%=userId%>**님 환영합니다!
+					<%=userId%>님 환영합니다!
 				</p>
 				<a href="<%=contextPath%>/board/list.do?boardType=free">자유게시판으로!</a>
 				<%
@@ -198,6 +223,5 @@ body {
 			</div>
 		</div>
 	</div>
-
 </body>
 </html>

@@ -1,20 +1,19 @@
 package member;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class MemberDTO {
 	private String id;
 	private String pass;
+	private String newPass; // 비밀번호 수정 시 사용할 임시 필드
 	private String name;
-	private String email;
-	private String phone;
 	private Date regidate;
 
 	// 기본 생성자
 	public MemberDTO() {
 	}
 
-	// Getter and Setter 메서드
+	// Getter 및 Setter
 	public String getId() {
 		return id;
 	}
@@ -31,28 +30,20 @@ public class MemberDTO {
 		this.pass = pass;
 	}
 
+	public String getNewPass() {
+		return newPass;
+	}
+
+	public void setNewPass(String newPass) {
+		this.newPass = newPass;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public void setPhone(String phone) {
-		this.phone = phone;
 	}
 
 	public Date getRegidate() {

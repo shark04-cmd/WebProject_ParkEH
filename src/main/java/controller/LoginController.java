@@ -1,54 +1,53 @@
 package controller;
 
 import java.io.IOException;
+import jakarta.servlet.ServletException; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServlet; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServletRequest; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServletResponse; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpSession; // ⬅️ jakarta로 변경
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import member.MemberDAO;
 import member.MemberDTO;
 
 public class LoginController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	// 로그인 폼으로 이동 (GET 요청)
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// /member/login.do 요청 시 View 경로로 포워딩
+		// GET 요청 시 로그인 폼으로 이동
 		req.getRequestDispatcher("/view/01member/login.jsp").forward(req, resp);
 	}
 
-	// 로그인 처리 (POST 요청)
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// 1. 요청 파라미터 받기
-		String id = req.getParameter("id");
-		String pass = req.getParameter("pass");
+		req.setCharacterEncoding("UTF-8");
 
-		// 2. DAO를 통해 DB에서 회원 정보 확인
-		MemberDAO dao = new MemberDAO(getServletContext());
-		MemberDTO dto = dao.getMemberDTO(id, pass);
+		// 1. 폼 값 받기
+		String userId = req.getParameter("id");
+		String userPass = req.getParameter("pass");
+		String referer = req.getParameter("referer"); // 로그인 후 돌아갈 페이지
 
-		// **중요: DAO에서 사용한 Connection을 닫습니다.**
+		// 2. DAO를 통해 회원 인증
+		MemberDAO dao = new MemberDAO(req.getServletContext());
+		MemberDTO dto = dao.getMemberDTO(userId, userPass);
 		dao.close();
 
-		// 3. 로그인 처리
+		// 3. 인증 결과 처리
 		if (dto != null) {
-			// 회원 정보가 일치하는 경우 (로그인 성공)
-
-			// 세션에 정보 저장 (Default.jsp에서 사용하기 위해)
+			// 로그인 성공
 			HttpSession session = req.getSession();
 			session.setAttribute("UserID", dto.getId());
 			session.setAttribute("UserName", dto.getName());
 
-			// Default.jsp로 리다이렉트 (메인 화면)
-			resp.sendRedirect(req.getContextPath() + "/Default.jsp");
+			// 4. 리다이렉트 처리
+			if (referer != null && !referer.isEmpty()) {
+				resp.sendRedirect(referer);
+			} else {
+				resp.sendRedirect(req.getContextPath() + "/Default.jsp");
+			}
 		} else {
-			// 회원 정보가 일치하지 않는 경우 (로그인 실패)
-
-			// 로그인 화면으로 돌아가며 에러 메시지를 전달
+			// 로그인 실패
 			req.setAttribute("LoginErrorMessage", "아이디 또는 비밀번호가 일치하지 않습니다.");
 			req.getRequestDispatcher("/view/01member/login.jsp").forward(req, resp);
 		}

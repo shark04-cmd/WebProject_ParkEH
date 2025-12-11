@@ -7,19 +7,12 @@ String contextPath = request.getContextPath();
 // Controller에서 전달된 데이터 받기
 BoardDTO dto = (BoardDTO) request.getAttribute("dto");
 String boardType = (String) request.getAttribute("boardType");
-
-// Controller에서 권한 확인을 이미 했지만, JSP에서 다시 한 번 확인합니다.
-String userId = (String) session.getAttribute("UserID");
-boolean isWriter = (userId != null && dto != null && userId.equals(dto.getId()));
-
-// DTO가 null이거나 작성자가 아니면 목록으로 돌려보냅니다. (Controller에서 처리하는 것이 일반적이지만, 안전장치로)
-if (dto == null || !isWriter) {
-	response.sendRedirect(contextPath + "/board/list.do?boardType=" + boardType);
-	return;
-}
+String errorMessage = (String) request.getAttribute("EditErrorMessage");
 
 // 게시판 이름 설정
 String boardName = "";
+if (boardType == null)
+	boardType = "free"; 
 if ("free".equals(boardType)) {
 	boardName = "자유 게시판";
 } else if ("qna".equals(boardType)) {
@@ -28,11 +21,11 @@ if ("free".equals(boardType)) {
 	boardName = "자료실 게시판";
 }
 
-// 자료실 게시판 여부
-boolean isDataBoard = "data".equals(boardType);
-
-// 에러 메시지 확인 (Controller에서 수정 실패 시 전달될 수 있음)
-String errorMessage = (String) request.getAttribute("EditErrorMessage");
+// DTO가 null인 경우 (Controller에서 처리했겠지만, JSP에서 안전장치)
+if (dto == null) {
+	response.sendRedirect(contextPath + "/board/list.do?boardType=" + boardType);
+	return;
+}
 %>
 <!DOCTYPE html>
 <html>
@@ -40,7 +33,7 @@ String errorMessage = (String) request.getAttribute("EditErrorMessage");
 <meta charset="UTF-8">
 <title><%=boardName%> 수정 - WevProject_PaekEH</title>
 <style>
-/* list.jsp, view.jsp와 동일한 스타일을 사용합니다. */
+/* 으녀기님의 스타일 가이드라인을 따릅니다. */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
@@ -122,7 +115,7 @@ body {
 .main-content {
 	flex-grow: 1;
 	padding: 50px;
-	display: flex;
+	display: flex; /* 폼 중앙 정렬을 위해 flex 추가 */
 	flex-direction: column;
 	align-items: center;
 }
@@ -131,115 +124,104 @@ body {
 	color: #0056b3;
 	margin-bottom: 30px;
 }
-/* 수정 폼 스타일 */
-.board-form {
-	width: 800px;
+/* 수정 폼 개별 스타일 (write.jsp와 동일) */
+.edit-form {
+	width: 600px;
 	padding: 20px;
 	border: 1px solid #ddd;
 	border-radius: 8px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-	background-color: #f9f9f9;
+	background-color: #ffffff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	text-align: left;
 }
 
-.form-group {
-	margin-bottom: 15px;
-}
-
-.form-group label {
+.edit-form label {
 	display: block;
-	font-weight: bold;
+	margin-top: 15px;
 	margin-bottom: 5px;
+	font-weight: bold;
 	color: #333;
 }
 
-.form-group input[type="text"], .form-group textarea {
+.edit-form input[type="text"], .edit-form textarea {
 	width: 100%;
 	padding: 10px;
 	border: 1px solid #ccc;
 	border-radius: 4px;
-	box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+	box-sizing: border-box;
 	font-size: 1em;
 }
 
-.form-group textarea {
-	height: 300px;
+.edit-form textarea {
+	height: 250px;
 	resize: vertical;
 }
 
-.form-actions {
+.btn-group {
 	text-align: right;
-	margin-top: 20px;
+	margin-top: 25px;
 }
 
-.form-actions button, .form-actions a {
+.btn-group input[type="submit"], .btn-group button {
 	padding: 10px 20px;
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
 	font-weight: bold;
 	margin-left: 10px;
-	text-decoration: none;
-	display: inline-block;
 }
 
-.btn-submit {
-	background-color: #28a745; /* 수정 완료 */
+.btn-group input[type="submit"] {
+	background-color: #ffc107; /* 수정 버튼 색상 변경 */
+	color: #333;
+}
+
+.btn-group input[type="submit"]:hover {
+	background-color: #e0a800;
+}
+
+.btn-group button {
+	background-color: #6c757d;
 	color: white;
 }
 
-.btn-submit:hover {
-	background-color: #1e7e34;
-}
-
-.btn-reset {
-	background-color: #6c757d; /* 재작성 */
-	color: white;
-}
-
-.btn-reset:hover {
+.btn-group button:hover {
 	background-color: #5a6268;
 }
 
-.btn-back {
-	background-color: #007bff; /* 취소/목록 */
-	color: white;
-}
-
-.btn-back:hover {
-	background-color: #0056b3;
-}
-
 .error-message {
-	color: #dc3545;
+	color: red;
 	font-weight: bold;
-	margin-bottom: 15px;
-	text-align: center;
+	margin-bottom: 10px;
 }
 </style>
 <script>
 	function validateForm(form) {
-		if (form.title.value.trim() == "") {
+		if (form.title.value.trim() === "") {
 			alert("제목을 입력하세요.");
 			form.title.focus();
 			return false;
 		}
-		if (form.content.value.trim() == "") {
+		if (form.content.value.trim() === "") {
 			alert("내용을 입력하세요.");
 			form.content.focus();
 			return false;
 		}
 		
-		// 자료실일 경우 파일명 필드도 검증 가능
-		var isDataBoard = "<%=isDataBoard%>" === "true";
-		if (isDataBoard) {
-			// 파일명 유효성 검사는 필요 시 추가 (여기서는 서버측 검증에 의존)
+		// 자료실 게시판일 경우, 파일명 유효성 검사 
+		if (form.boardType.value === "data") {
+			const fileNameField = form.fileName;
+			if (fileNameField.value.trim() === "") {
+				alert("자료실 게시물은 파일명을 입력해야 합니다. (실제 업로드는 생략)");
+				fileNameField.focus();
+				return false;
+			}
 		}
-
 		return true;
 	}
 	
 	function goBack() {
-		// 수정 취소 시 상세 보기 페이지로 이동
+		// 상세 보기 페이지로 이동합니다.
 		window.location.href = "<%=contextPath%>/board/view.do?boardType=<%=boardType%>&num=<%=dto.getNum()%>
 	";
 	}
@@ -253,19 +235,8 @@ body {
 				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
 		</div>
 		<div class="header-right">
-			<%
-			if (userId != null) {
-			%>
 			<a href="<%=contextPath%>/member/edit.do">회원정보수정</a> <a
 				href="<%=contextPath%>/member/logout.do">로그아웃</a>
-			<%
-			} else {
-			%>
-			<a href="<%=contextPath%>/member/login.do">로그인</a> <a
-				href="<%=contextPath%>/member/register.do">회원가입</a>
-			<%
-			}
-			%>
 		</div>
 	</div>
 
@@ -290,52 +261,43 @@ body {
 			<%
 			if (errorMessage != null) {
 			%>
-			<p class="error-message">
-				<%=errorMessage%></p>
+			<p class="error-message"><%=errorMessage%></p>
 			<%
 			}
 			%>
 
-			<form name="editForm" class="board-form"
-				action="<%=contextPath%>/board/edit.do" method="post"
-				onsubmit="return validateForm(this);">
+			<form class="edit-form" action="<%=contextPath%>/board/edit.do"
+				method="post" onsubmit="return validateForm(this);">
+				
+				<input type="hidden" name="boardType" value="<%=boardType%>">
+				<input type="hidden" name="num" value="<%=dto.getNum()%>"> 
 
-				<input type="hidden" name="num" value="<%=dto.getNum()%>" /> <input
-					type="hidden" name="boardType" value="<%=boardType%>" />
-
-				<div class="form-group">
-					<label for="title">작성자</label> <input type="text" id="name"
-						name="name" value="<%=dto.getName()%> (<%=dto.getId()%>) - 수정 불가"
-						readonly style="background-color: #eee;">
-				</div>
-
-				<div class="form-group">
-					<label for="title">제목</label> <input type="text" id="title"
-						name="title" value="<%=dto.getTitle()%>" required />
-				</div>
-
-				<div class="form-group">
-					<label for="content">내용</label>
-					<textarea id="content" name="content" required><%=dto.getContent()%></textarea>
-				</div>
+				<label>작성자</label> <input type="text" value="<%=dto.getName()%> (<%=dto.getId()%>) " readonly
+					style="background-color: #eee;"> <label for="title">제목</label>
+				<input type="text" id="title" name="title" required
+					placeholder="제목을 입력하세요" value="<%=dto.getTitle()%>">
 
 				<%
-				if (isDataBoard) {
+				// 자료실 게시판일 경우 파일명 입력 필드 추가
+				if ("data".equals(boardType)) {
 				%>
-				<div class="form-group">
-					<label for="fileName">첨부 파일명</label> <input type="text"
-						id="fileName" name="fileName"
-						value="<%=dto.getFileName() != null ? dto.getFileName() : ""%>"
-						placeholder="자료실 파일명을 입력하세요 (실제 파일 업로드 기능은 제외)">
-				</div>
+				<label for="fileName">파일명 (실제 업로드 대신 파일명만 입력)</label> <input
+					type="text" id="fileName" name="fileName" required
+					placeholder="예: image.jpg, video.mp4"
+					value="<%=dto.getFileName() != null ? dto.getFileName() : ""%>">
+				<span style="font-size: 0.85em; color: gray;">* cos.jar를 사용하지
+						않으므로 파일명만 저장됩니다.</span>
 				<%
 				}
 				%>
 
-				<div class="form-actions">
-					<button type="submit" class="btn-submit">수정 완료</button>
-					<button type="reset" class="btn-reset">재작성</button>
-					<button type="button" onclick="goBack()" class="btn-back">취소</button>
+				<label for="content">내용</label>
+				<textarea id="content" name="content" required
+					placeholder="내용을 입력하세요"><%=dto.getContent()%></textarea>
+
+				<div class="btn-group">
+					<button type="button" onclick="goBack()">취소/상세보기</button>
+					<input type="submit" value="수정 완료">
 				</div>
 			</form>
 		</div>

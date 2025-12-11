@@ -1,68 +1,61 @@
 package controller;
 
 import java.io.IOException;
+import jakarta.servlet.ServletException; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServlet; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServletRequest; // ⬅️ jakarta로 변경
+import jakarta.servlet.http.HttpServletResponse; // ⬅️ jakarta로 변경
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import member.MemberDAO;
 import member.MemberDTO;
 
 public class RegisterController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	// 회원가입 폼으로 이동 (GET 요청)
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// /member/register.do 요청 시 View 경로로 포워딩
+		// GET 요청 시 회원가입 폼으로 이동
 		req.getRequestDispatcher("/view/01member/register.jsp").forward(req, resp);
 	}
 
-	// 회원가입 처리 (POST 요청)
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
 
-		// 1. 요청 파라미터 받기 및 DTO 설정
-		MemberDTO dto = new MemberDTO();
-		String id = req.getParameter("id"); // ID 값 미리 저장
-		dto.setId(id);
-		dto.setPass(req.getParameter("pass"));
-		dto.setName(req.getParameter("name"));
-		dto.setEmail(req.getParameter("email"));
-		// 전화번호 필드는 'XXX-XXXX-XXXX' 형식으로 조합된 값이 넘어옵니다.
-		dto.setPhone(req.getParameter("phone"));
+		// 1. 폼 값 받기
+		String userId = req.getParameter("id");
+		String userPass = req.getParameter("pass");
+		String confirmPass = req.getParameter("confirmPass");
+		String name = req.getParameter("name");
 
-		MemberDAO dao = new MemberDAO(getServletContext());
-
-		// 2-1. 서버 측 아이디 중복 최종 확인
-		boolean isDuplicated = dao.idCheck(id);
-
-		if (isDuplicated) {
-			// 아이디가 중복되면 회원가입 실패 처리
-			dao.close();
-			// 요청하신 실패 메시지
-			req.setAttribute("RegisterErrorMessage", "회원가입에 실패하였습니다");
+		// 2. 유효성 검사
+		if (!userPass.equals(confirmPass)) {
+			req.setAttribute("RegisterErrorMessage", "비밀번호와 비밀번호 확인이 일치하지 않습니다.");
 			req.getRequestDispatcher("/view/01member/register.jsp").forward(req, resp);
-			return; // 중복되면 여기서 요청 처리를 중단하고 회원가입 창으로 이동
+			return;
 		}
 
-		// 2-2. 정상적인 회원 정보 삽입
+		// 3. DTO에 저장
+		MemberDTO dto = new MemberDTO();
+		dto.setId(userId);
+		dto.setPass(userPass);
+		dto.setName(name);
+
+		// 4. DAO를 통해 회원 가입 처리
+		MemberDAO dao = new MemberDAO(req.getServletContext());
 		int result = dao.insertMember(dto);
 		dao.close();
 
-		// 3. 결과 처리
+		// 5. 결과 처리
 		if (result == 1) {
-			// 회원가입 성공 시: 세션에 메시지를 저장하고 로그인 페이지로 리다이렉트
-			// 세션에 저장된 메시지는 로그인 페이지에서 한번만 표시됩니다.
-			req.getSession().setAttribute("LoginSuccessMessage", "회원가입 되셨습니다!" + "<br>" + "로그인해주세요!");
-
-			// 로그인 페이지로 리다이렉트 (경로 수정 없음)
-			resp.sendRedirect(req.getContextPath() + "/member/login.do");
+			// 성공 시 성공 페이지로 이동
+			req.setAttribute("SuccessMessage", name + "님, 회원가입이 완료되었습니다!");
+			req.setAttribute("LinkUrl", req.getContextPath() + "/member/login.do");
+			req.setAttribute("LinkText", "로그인 하러 가기");
+			req.getRequestDispatcher("/view/01member/Success.jsp").forward(req, resp);
 		} else {
-			// 회원가입 실패 시 (DB 오류 등)
-			req.setAttribute("RegisterErrorMessage", "회원가입에 실패했습니다. 다시 시도해 주세요.");
+			// 실패 시 (ID 중복 등)
+			req.setAttribute("RegisterErrorMessage", "회원가입에 실패했습니다. 아이디 중복 또는 관리자에게 문의하세요.");
 			req.getRequestDispatcher("/view/01member/register.jsp").forward(req, resp);
 		}
 	}
