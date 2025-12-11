@@ -62,6 +62,15 @@
 		<url-pattern>/member/idcheck.do</url-pattern>
 	</servlet-mapping>
 
+	<servlet>
+		<servlet-name>LogoutController</servlet-name>
+		<servlet-class>controller.LogoutController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>LogoutController</servlet-name>
+		<url-pattern>/member/logout.do</url-pattern>
+	</servlet-mapping>
+
 	<context-param>
 		<param-name>POSTS_PER_PAGE</param-name>
 		<param-value>10</param-value>

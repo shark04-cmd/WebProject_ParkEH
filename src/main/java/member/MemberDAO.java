@@ -13,15 +13,15 @@ public class MemberDAO extends JDBConnect {
 	}
 
 	/**
-	 * 명시한 아이디와 패스워드에 해당하는 회원을 찾아 반환합니다.
+	 * 명시한 아이디와 패스워드에 해당하는 회원을 찾아 반환합니다. * @param id 사용자 아이디
 	 * 
-	 * @param id   사용자 아이디
 	 * @param pass 사용자 패스워드
 	 * @return 일치하는 회원이 없으면 null, 있으면 MemberDTO 객체를 반환
 	 */
 	public MemberDTO getMemberDTO(String id, String pass) {
 		MemberDTO dto = null;
-		String query = "SELECT * FROM member WHERE id=? AND pass=?";
+		// [수정]: 테이블 이름을 정확히 'MEMBER'로 수정
+		String query = "SELECT * FROM MEMBER WHERE ID=? AND PASS=?";
 
 		try {
 			psmt = con.prepareStatement(query);
@@ -32,12 +32,13 @@ public class MemberDAO extends JDBConnect {
 
 			if (rs.next()) {
 				dto = new MemberDTO();
-				dto.setId(rs.getString("id"));
-				dto.setPass(rs.getString("pass"));
-				dto.setName(rs.getString("name"));
-				dto.setEmail(rs.getString("email"));
-				dto.setPhone(rs.getString("phone"));
-				dto.setRegidate(rs.getDate("regidate"));
+				// 컬럼 이름은 대문자로 통일
+				dto.setId(rs.getString("ID"));
+				dto.setPass(rs.getString("PASS"));
+				dto.setName(rs.getString("NAME"));
+				dto.setEmail(rs.getString("EMAIL"));
+				dto.setPhone(rs.getString("PHONE"));
+				dto.setRegidate(rs.getDate("REGIDATE"));
 			}
 		} catch (Exception e) {
 			System.out.println("getMemberDTO 중 예외 발생");
@@ -48,30 +49,29 @@ public class MemberDAO extends JDBConnect {
 	}
 
 	/**
-	 * 새로운 회원 정보를 DB에 삽입합니다.
+	 * 새로운 회원 정보를 DB에 삽입합니다. * @param dto 삽입할 회원 정보 (아이디, 패스워드, 이름, 이메일, 전화번호)
 	 * 
-	 * @param dto 삽입할 회원 정보 (아이디, 패스워드, 이름, 이메일, 전화번호)
 	 * @return 성공하면 1, 실패하면 0 반환
 	 */
 	public int insertMember(MemberDTO dto) {
 		int result = 0;
 
 		try {
-			// 쿼리문 준비
-			String query = "INSERT INTO member (id, pass, name, email, phone) VALUES (?, ?, ?, ?, ?)";
+			// [수정]: 테이블 이름을 'MEMBER'로 수정하고, REGIDATE를 포함하여 전화번호(PHONE) 저장 보장
+			String query = "INSERT INTO MEMBER (ID, PASS, NAME, EMAIL, PHONE, REGIDATE) VALUES (?, ?, ?, ?, ?, sysdate)";
 
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, dto.getId());
 			psmt.setString(2, dto.getPass());
 			psmt.setString(3, dto.getName());
 			psmt.setString(4, dto.getEmail());
+			// PHONE 값 바인딩 (XXX-XXXX-XXXX 형태 문자열)
 			psmt.setString(5, dto.getPhone());
 
 			// 쿼리 실행
 			result = psmt.executeUpdate();
 		} catch (SQLException e) {
-			// SQL 예외 발생 시 (예: PK 제약조건 위반으로 인한 아이디 중복)
-			System.out.println("insertMember 중 SQL 예외 발생 (아이디 중복 가능성)");
+			System.out.println("insertMember 중 SQL 예외 발생 (아이디 중복 가능성 또는 DB 연결 오류)");
 			e.printStackTrace();
 		} catch (Exception e) {
 			System.out.println("insertMember 중 일반 예외 발생");
@@ -82,28 +82,29 @@ public class MemberDAO extends JDBConnect {
 	}
 
 	/**
-	 * 아이디 중복 여부를 확인합니다.
+	 * 아이디 중복 여부를 확인합니다. * @param id 확인할 아이디
 	 * 
-	 * @param id 확인할 아이디
 	 * @return 중복이면 true, 사용 가능하면 false
 	 */
 	public boolean idCheck(String id) {
 		boolean result = true; // 기본값: true (중복)
-		String query = "SELECT COUNT(*) FROM member WHERE id=?";
+		// [수정]: 테이블 이름을 'MEMBER'로 수정
+		String query = "SELECT COUNT(*) FROM MEMBER WHERE ID=?";
 		try {
 			psmt = con.prepareStatement(query);
 			psmt.setString(1, id);
 			rs = psmt.executeQuery();
+
 			if (rs.next()) {
 				int count = rs.getInt(1);
 				if (count == 0) {
-					result = false; // 카운트가 0이면 사용 가능 (중복 아님)
+					result = false; // 사용 가능
 				}
 			}
 		} catch (Exception e) {
 			System.out.println("ID 중복 확인 중 예외 발생: " + e.getMessage());
 			e.printStackTrace();
-			// DB 오류 시 안전하게 중복으로 처리하여 가입을 막습니다.
+			// DB 오류 발생 시, 안전을 위해 중복(true) 처리
 			result = true;
 		}
 		return result;

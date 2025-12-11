@@ -31,6 +31,7 @@ public class RegisterController extends HttpServlet {
 		dto.setPass(req.getParameter("pass"));
 		dto.setName(req.getParameter("name"));
 		dto.setEmail(req.getParameter("email"));
+		// 전화번호 필드는 'XXX-XXXX-XXXX' 형식으로 조합된 값이 넘어옵니다.
 		dto.setPhone(req.getParameter("phone"));
 
 		MemberDAO dao = new MemberDAO(getServletContext());
@@ -55,7 +56,7 @@ public class RegisterController extends HttpServlet {
 		if (result == 1) {
 			// 회원가입 성공 시: 세션에 메시지를 저장하고 로그인 페이지로 리다이렉트
 			// 세션에 저장된 메시지는 로그인 페이지에서 한번만 표시됩니다.
-			req.getSession().setAttribute("LoginSuccessMessage", "회원가입 되셨습니다!");
+			req.getSession().setAttribute("LoginSuccessMessage", "회원가입 되셨습니다!" + "<br>" + "로그인해주세요!");
 
 			// 로그인 페이지로 리다이렉트 (경로 수정 없음)
 			resp.sendRedirect(req.getContextPath() + "/member/login.do");

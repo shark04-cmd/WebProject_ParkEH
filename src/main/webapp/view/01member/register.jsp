@@ -10,7 +10,7 @@ String errorMessage = (String) request.getAttribute("RegisterErrorMessage");
 <meta charset="UTF-8">
 <title>회원가입 - WevProject_PaekEH</title>
 <style>
-/* ... (스타일 생략 - 이전과 동일) ... */
+/* ... (스타일 생략 - 변경 없음) ... */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
@@ -191,7 +191,7 @@ body {
 
 <script>
 	// 전역 변수로 아이디 중복 상태를 저장합니다.
-    let isIdDuplicated = false; 
+    let isIdDuplicated = true; // 초기값은 중복 또는 사용 불가 상태로 설정하여 확인 전에 가입 방지
     let idCheckXhr = null; 
 
 	/**
@@ -238,25 +238,44 @@ body {
 	 * 폼 제출 전에 3개 필드의 값을 조합하여 숨겨진 필드(name="phone")에 저장
 	 */
 	function combinePhoneNumber() {
+		
+        // ★★★ [로그 강제 출력] 함수 시작 지점 확인 (디버깅 목적)
+        console.log("combinePhoneNumber function started."); 
+        
 		const p1 = document.getElementById('phone1').value;
 		const p2 = document.getElementById('phone2').value;
 		const p3 = document.getElementById('phone3').value;
 		const combinedInput = document.getElementById('phone');
 
+		// 1. 전화번호 조합
 		// 모든 필드가 비어있지 않은 경우에만 조합하여 전송합니다.
-		if (p1 && p2 && p3) {
+		if (p1 && p2 && p3 && p1.length === 3 && p2.length === 4 && p3.length === 4) {
 			combinedInput.value = `${p1}-${p2}-${p3}`;
 		} else {
 			combinedInput.value = "";
 		}
+        
+        // 2. [디버깅 로그] 숨겨진 필드의 값 확인
+        console.log("Combine Phone Result (Client Side): " + combinedInput.value); 
 
-		// 필수 필드인지 확인
-		if (!combinedInput.value && combinedInput.required) {
-			alert('전화번호를 올바르게 입력해주세요.');
-			return false; // 제출 방지
+
+		// 3. 필수 필드 유효성 검사 (required가 없으므로 여기서 수동 체크)
+		if (!combinedInput.value) {
+			alert('전화번호를 올바르게 입력해주세요. (3-4-4 자리)');
+			document.getElementById('phone1').focus();
+			// return false; // 제출 방지
 		}
 		
-		return true; // 제출 허용
+		// 4. 아이디 중복 상태 확인
+        if (isIdDuplicated) {
+            alert('사용할 수 없는 아이디입니다. 다시 확인해 주세요.');
+            document.getElementById('id').focus();
+            // return false;
+        }
+		
+		// ★★★ 폼 제출을 일시적으로 중단하여 로그를 확인할 수 있도록 합니다. ★★★
+        console.log("!!! 폼 제출 중단됨: 로그를 확인하세요 !!!");
+        return false; 
 	}
 	
 	/**
@@ -307,7 +326,7 @@ body {
                             isIdDuplicated = true; 
                         } else {
                             // 사용 가능한 경우: 파란색/초록색
-                            idMessage.style.color = 'blue';
+                            idMessage.style.color = 'blue'; 
                             isIdDuplicated = false; 
                         }
                     } catch (e) {
@@ -373,7 +392,7 @@ body {
 				<form action="<%=contextPath%>/member/register.do" method="post"
 					onsubmit="return combinePhoneNumber()">
 
-					<input type="hidden" id="phone" name="phone" required> <label
+					<input type="hidden" id="phone" name="phone"> <label
 						for="id">아이디</label> <input type="text" id="id" name="id" required
 						placeholder="아이디" maxlength="20"
 						value="<%=(request.getParameter("id") != null) ? request.getParameter("id") : ""%>"
@@ -386,7 +405,7 @@ body {
 						maxlength="30"> <label for="email">이메일</label> <input
 						type="email" id="email" name="email" required
 						placeholder="example@domain.com" maxlength="100"> <label
-						for="phone">전화번호 (3-4-4 자리)</label>
+						for="phone1">전화번호 (3-4-4 자리)</label>
 					<div class="phone-group">
 						<input type="tel" id="phone1" maxlength="3" required
 							placeholder="010" oninput="autoMove(this, 3, 'phone2')"
