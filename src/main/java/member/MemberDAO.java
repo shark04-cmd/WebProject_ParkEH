@@ -13,8 +13,9 @@ public class MemberDAO extends JDBConnect {
 	}
 
 	/**
-	 * 명시한 아이디와 패스워드에 해당하는 회원을 찾아 반환합니다. * @param id 사용자 아이디
+	 * 명시한 아이디와 패스워드에 해당하는 회원을 찾아 반환합니다.
 	 * 
+	 * @param id   사용자 아이디
 	 * @param pass 사용자 패스워드
 	 * @return 일치하는 회원이 없으면 null, 있으면 MemberDTO 객체를 반환
 	 */
@@ -47,8 +48,9 @@ public class MemberDAO extends JDBConnect {
 	}
 
 	/**
-	 * 새로운 회원 정보를 DB에 삽입합니다. * @param dto 삽입할 회원 정보 (아이디, 패스워드, 이름, 이메일, 전화번호)
+	 * 새로운 회원 정보를 DB에 삽입합니다.
 	 * 
+	 * @param dto 삽입할 회원 정보 (아이디, 패스워드, 이름, 이메일, 전화번호)
 	 * @return 성공하면 1, 실패하면 0 반환
 	 */
 	public int insertMember(MemberDTO dto) {
@@ -76,6 +78,34 @@ public class MemberDAO extends JDBConnect {
 			e.printStackTrace();
 		}
 
+		return result;
+	}
+
+	/**
+	 * 아이디 중복 여부를 확인합니다.
+	 * 
+	 * @param id 확인할 아이디
+	 * @return 중복이면 true, 사용 가능하면 false
+	 */
+	public boolean idCheck(String id) {
+		boolean result = true; // 기본값: true (중복)
+		String query = "SELECT COUNT(*) FROM member WHERE id=?";
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, id);
+			rs = psmt.executeQuery();
+			if (rs.next()) {
+				int count = rs.getInt(1);
+				if (count == 0) {
+					result = false; // 카운트가 0이면 사용 가능 (중복 아님)
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("ID 중복 확인 중 예외 발생: " + e.getMessage());
+			e.printStackTrace();
+			// DB 오류 시 안전하게 중복으로 처리하여 가입을 막습니다.
+			result = true;
+		}
 		return result;
 	}
 }

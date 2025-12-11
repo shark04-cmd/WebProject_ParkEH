@@ -1,10 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%
-// 컨텍스트 경로를 변수에 저장하여 JSP 내에서 쉽게 사용합니다.
 String contextPath = request.getContextPath();
-// 로그인 Controller에서 로그인 실패 시 전달하는 에러 메시지 확인
-String errorMessage = (String) request.getAttribute("LoginErrorMessage");
+String loginError = (String) request.getAttribute("LoginErrorMessage");
+
+// [추가] 세션에서 성공 메시지를 가져오고 바로 제거합니다.
+String successMessage = (String) session.getAttribute("LoginSuccessMessage");
+if (successMessage != null) {
+	session.removeAttribute("LoginSuccessMessage");
+}
 %>
 <!DOCTYPE html>
 <html>
@@ -12,13 +16,13 @@ String errorMessage = (String) request.getAttribute("LoginErrorMessage");
 <meta charset="UTF-8">
 <title>로그인 - WevProject_PaekEH</title>
 <style>
-/* Default.jsp와 동일한 스타일을 적용합니다. */
+/* ... (스타일 생략) ... */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
 	background-color: #f4f7f6;
 }
-
+/* ... (기존 스타일 유지) ... */
 .header {
 	display: flex;
 	justify-content: space-between;
@@ -94,7 +98,7 @@ body {
 .main-content {
 	flex-grow: 1;
 	padding: 50px;
-	display: flex; /* 중앙 정렬을 위해 flex 사용 */
+	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
@@ -112,14 +116,14 @@ body {
 	border-radius: 8px;
 	background-color: #ffffff;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	width: 300px;
+	width: 350px;
 	text-align: left;
 }
 
 .login-form-box label {
 	display: block;
-	margin-top: 15px;
-	margin-bottom: 5px;
+	margin-top: 10px;
+	margin-bottom: 3px;
 	font-weight: bold;
 	color: #333;
 }
@@ -127,11 +131,11 @@ body {
 .login-form-box input[type="text"], .login-form-box input[type="password"]
 	{
 	width: 100%;
-	padding: 10px;
-	margin-bottom: 10px;
+	padding: 8px;
+	margin-bottom: 8px;
 	border: 1px solid #ccc;
 	border-radius: 4px;
-	box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+	box-sizing: border-box;
 }
 
 .login-form-box input[type="submit"] {
@@ -143,7 +147,7 @@ body {
 	border-radius: 4px;
 	cursor: pointer;
 	font-size: 1.1em;
-	margin-top: 20px;
+	margin-top: 25px;
 }
 
 .login-form-box input[type="submit"]:hover {
@@ -154,7 +158,7 @@ body {
 	display: block;
 	margin-top: 20px;
 	text-align: center;
-	color: #007bff;
+	color: #28a745;
 	text-decoration: none;
 }
 
@@ -162,10 +166,22 @@ body {
 	text-decoration: underline;
 }
 
-.error-message { /* 추가: 에러 메시지 스타일 */
+.error-message {
 	color: #cc0000;
 	font-weight: bold;
 	margin-bottom: 15px;
+	text-align: center;
+}
+
+/* [추가] 성공 메시지 스타일 */
+.success-message {
+	color: #28a745;
+	font-weight: bold;
+	margin-bottom: 15px;
+	padding: 10px;
+	background-color: #e9f7ef;
+	border: 1px solid #28a745;
+	border-radius: 4px;
 	text-align: center;
 }
 </style>
@@ -197,12 +213,20 @@ body {
 		</div>
 
 		<div class="main-content">
-			<h2>회원 로그인</h2>
+			<h2>로그인</h2>
 
 			<%
-			if (errorMessage != null) {
+			if (successMessage != null) {
 			%>
-			<p class="error-message"><%=errorMessage%></p>
+			<p class="success-message"><%=successMessage%></p>
+			<%
+			}
+			%>
+
+			<%
+			if (loginError != null) {
+			%>
+			<p class="error-message"><%=loginError%></p>
 			<%
 			}
 			%>
@@ -210,15 +234,12 @@ body {
 			<div class="login-form-box">
 				<form action="<%=contextPath%>/member/login.do" method="post">
 					<label for="id">아이디</label> <input type="text" id="id" name="id"
-						required placeholder="아이디를 입력하세요"
-						value="<%=(request.getParameter("id") != null) ? request.getParameter("id") : ""%>">
-
-					<label for="pass">패스워드</label> <input type="password" id="pass"
-						name="pass" required placeholder="비밀번호를 입력하세요"> <input
-						type="submit" value="로그인">
+						required placeholder="아이디"> <label for="pass">패스워드</label>
+					<input type="password" id="pass" name="pass" required
+						placeholder="비밀번호"> <input type="submit" value="로그인">
 				</form>
-				<a href="<%=contextPath%>/member/register.do"
-					class="register-link">아직 회원이 아니신가요? 회원가입</a>
+				<a href="<%=contextPath%>/member/register.do" class="register-link">아직
+					회원이 아니신가요? 회원가입</a>
 			</div>
 		</div>
 	</div>

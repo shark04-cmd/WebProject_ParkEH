@@ -53,6 +53,15 @@
 		<url-pattern>/member/register.do</url-pattern>
 	</servlet-mapping>
 
+	<servlet>
+		<servlet-name>IdCheckController</servlet-name>
+		<servlet-class>controller.IdCheckController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>IdCheckController</servlet-name>
+		<url-pattern>/member/idcheck.do</url-pattern>
+	</servlet-mapping>
+
 	<context-param>
 		<param-name>POSTS_PER_PAGE</param-name>
 		<param-value>10</param-value>
