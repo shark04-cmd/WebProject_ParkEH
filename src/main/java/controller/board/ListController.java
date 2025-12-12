@@ -10,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import board.BoardDAO;
 import board.BoardDTO;
@@ -20,6 +21,20 @@ public class ListController extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+		// 0. 로그인 체크 로직 (게시물 목록은 로그인 없이 볼 수 있도록 주석 처리 또는 제거)
+		HttpSession session = req.getSession();
+		String userId = (String) session.getAttribute("UserID");
+		// if (userId == null || userId.isEmpty()) {
+		// String alertMsg = "로그인을 하고 와주세요!";
+		// String url = req.getContextPath() + "/Default.jsp";
+
+		// resp.setContentType("text/html;charset=UTF-8");
+		// resp.getWriter().println("<script>alert('" + alertMsg + "'); location.href='"
+		// + url + "';</script>");
+		// return;
+		// }
+
 		// 1. 게시판 타입 설정
 		String boardType = req.getParameter("boardType");
 		if (boardType == null || boardType.isEmpty()) {
@@ -28,7 +43,6 @@ public class ListController extends HttpServlet {
 
 		// 2. DAO 객체 생성 및 맵 설정
 		ServletContext application = this.getServletContext();
-		// boardType에 따라 DAO가 사용할 테이블 이름(board_free, board_qna, board_data)이 결정됩니다.
 		BoardDAO dao = new BoardDAO(application, boardType);
 
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -78,7 +92,7 @@ public class ListController extends HttpServlet {
 		map.put("totalCount", totalCount);
 
 		// 8. 페이징 문자열 생성
-		String pagingStr = BoardPage.pagingStr(totalCount, pageSize, blockPage, pageNum,
+		String pagingStr = common.BoardPage.pagingStr(totalCount, pageSize, blockPage, pageNum,
 				req.getContextPath() + "/board/list.do?boardType=" + boardType);
 		map.put("pagingStr", pagingStr);
 

@@ -10,6 +10,13 @@ String contextPath = request.getContextPath();
 List<BoardDTO> boardList = (List<BoardDTO>) request.getAttribute("boardList");
 Map<String, Object> map = (Map<String, Object>) request.getAttribute("map");
 
+// 🚨 [수정된 안전 장치]: map 변수가 null인 경우 (Controller에서 정상적으로 데이터를 받지 못한 경우)
+if (map == null) {
+	// Controller를 다시 호출하도록 리다이렉트하여 처리를 위임
+	response.sendRedirect(contextPath + "/board/list.do?boardType=free");
+	return;
+}
+
 String userId = (String) session.getAttribute("UserID");
 boolean isLoggedIn = (userId != null && !userId.isEmpty());
 
@@ -329,7 +336,10 @@ body {
 							href="<%=contextPath%>/board/view.do?boardType=<%=dto.getBoardType()%>&num=<%=dto.getNum()%>">
 								<%=dto.getTitle()%>
 						</a></td>
-						<td><%=dto.getName()%> (<%=dto.getId()%>)</td>
+
+						<%-- 🚨 [수정된 부분]: ID 제거, 이름만 출력 --%>
+						<td><%=dto.getName()%></td>
+
 						<td><%=dto.getPostdate().toString()%></td>
 						<td><%=dto.getVisitcount()%></td>
 						<td><%=dto.getLikeCount()%></td>
