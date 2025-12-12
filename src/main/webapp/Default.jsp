@@ -7,14 +7,23 @@ String contextPath = request.getContextPath();
 String userId = (String) session.getAttribute("UserID");
 boolean isLoggedIn = (userId != null && !userId.isEmpty());
 
-// [추가] 로그아웃 성공 메시지를 세션에서 확인하고 가져옵니다.
+// [핵심 로직 시작] 로그아웃 메시지 확인
 String logoutMessage = (String) session.getAttribute("LogoutSuccessMessage");
 
-// [추가] 메시지를 가져왔다면, 바로 세션에서 제거하여 새로고침 시 사라지게 합니다.
-if (logoutMessage != null) {
-	session.removeAttribute("LogoutSuccessMessage");
-}
+// 플래그는 유지하되, 사이드바 제어에는 사용하지 않습니다.
+boolean isLogoutPage = (logoutMessage != null);
 
+if (isLogoutPage) {
+	// 1. 메시지를 세션에서 제거 (새로고침 시 메시지 사라짐)
+	session.removeAttribute("LogoutSuccessMessage");
+
+	// 2. 메시지를 읽은 후 세션 무효화 (로그아웃 완료)
+	session.invalidate();
+
+	// 3. 무효화 후에는 세션 속성을 읽을 수 없으므로, 명시적으로 초기화합니다.
+	userId = null;
+	isLoggedIn = false;
+}
 %>
 <!DOCTYPE html>
 <html>
@@ -22,7 +31,6 @@ if (logoutMessage != null) {
 <meta charset="UTF-8">
 <title>메인 - WevProject_ParkEH</title>
 <style>
-/* 으녀기님이 요청하신 스타일 적용 */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
@@ -123,7 +131,8 @@ body {
 	display: inline-block;
 	background-color: #ffffff;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-	min-width: 300px; /* 메시지 박스 크기 유지 */
+	min-width: 300px;
+	max-width: 450px;
 }
 
 .message-box p {
@@ -142,16 +151,17 @@ body {
 	font-weight: bold;
 }
 
-/* [추가] 로그아웃 메시지 전용 스타일 */
+/* [수정] 로그아웃 메시지 전용 스타일: 빨간색 강조 */
 .info-message {
-	background-color: #fff3cd; /* 노란색 계열 배경 */
-	color: #856404;
-	border: 1px solid #ffeeba;
+	background-color: #ffffff; /* 배경을 흰색으로 변경 */
+	color: #dc3545; /* 글씨를 빨간색으로 변경 */
+	border: 2px solid #dc3545; /* 빨간색 테두리로 강조 */
 	padding: 15px 30px;
 	border-radius: 8px;
 	margin-bottom: 20px;
-	font-size: 1.1em;
+	font-size: 1.2em; /* 🚨 [최종 반영]: 글씨 크기를 1.2em로 유지 */
 	font-weight: bold;
+	max-width: 450px;
 }
 </style>
 </head>
@@ -180,6 +190,7 @@ body {
 	</div>
 
 	<div class="container">
+		<%-- 🚨 [최종 수정]: 사이드바 숨김 로직을 삭제하고 항상 표시합니다. --%>
 		<div class="sidebar">
 			<h4>게시판 메뉴</h4>
 			<ul class="menu-list">
@@ -194,7 +205,7 @@ body {
 
 		<div class="main-content">
 			<%
-			// [추가] 로그아웃 메시지 출력
+			// [출력] 로그아웃 메시지 출력
 			if (logoutMessage != null) {
 			%>
 			<div class="info-message">
