@@ -3,24 +3,18 @@
 <%
 String contextPath = request.getContextPath();
 
-// 세션에서 사용자 ID를 가져옵니다. (로그인 여부 판단)
 String userId = (String) session.getAttribute("UserID");
 boolean isLoggedIn = (userId != null && !userId.isEmpty());
 
-// [핵심 로직 시작] 로그아웃 메시지 확인
 String logoutMessage = (String) session.getAttribute("LogoutSuccessMessage");
 
-// 플래그는 유지하되, 사이드바 제어에는 사용하지 않습니다.
 boolean isLogoutPage = (logoutMessage != null);
 
 if (isLogoutPage) {
-	// 1. 메시지를 세션에서 제거 (새로고침 시 메시지 사라짐)
 	session.removeAttribute("LogoutSuccessMessage");
 
-	// 2. 메시지를 읽은 후 세션 무효화 (로그아웃 완료)
 	session.invalidate();
 
-	// 3. 무효화 후에는 세션 속성을 읽을 수 없으므로, 명시적으로 초기화합니다.
 	userId = null;
 	isLoggedIn = false;
 }
@@ -190,7 +184,6 @@ body {
 	</div>
 
 	<div class="container">
-		<%-- 🚨 [최종 수정]: 사이드바 숨김 로직을 삭제하고 항상 표시합니다. --%>
 		<div class="sidebar">
 			<h4>게시판 메뉴</h4>
 			<ul class="menu-list">

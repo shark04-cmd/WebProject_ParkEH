@@ -49,8 +49,8 @@ public class EditController extends HttpServlet {
 		}
 
 		String name = req.getParameter("name");
-		String pass = req.getParameter("pass"); // 현재 비밀번호 (인증용)
-		String newPass = req.getParameter("newPass"); // ⚠️ 수정: 새 비밀번호 파라미터 추가
+		String pass = req.getParameter("pass"); 
+		String newPass = req.getParameter("newPass"); 
 
 		// DTO에 저장
 		MemberDTO dto = new MemberDTO();

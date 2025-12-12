@@ -86,12 +86,12 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>EditController</servlet-name>
-		<url-pattern>/member/edit.do</url-pattern>
+		<url-pattern>/board/edit.do</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>EditController</servlet-name>
-		<url-pattern>/board/edit.do</url-pattern>
+		<url-pattern>/board/edi.do</url-pattern>
 	</servlet-mapping>
 
 	<servlet>

@@ -4,11 +4,9 @@
 <%
 String contextPath = request.getContextPath();
 
-// ⚠️ 수정: MemberDTO로 타입 변경
 MemberDTO dto = (MemberDTO) request.getAttribute("dto");
 String userId = (String) session.getAttribute("UserID");
 
-// Controller에서 권한 확인을 이미 했지만, 안전장치
 if (dto == null || userId == null || !userId.equals(dto.getId())) {
 	response.sendRedirect(contextPath + "/member/login.do");
 	return;
@@ -22,7 +20,6 @@ String errorMessage = (String) request.getAttribute("EditErrorMessage");
 <meta charset="UTF-8">
 <title>회원정보 수정 - WevProject_PaekEH</title>
 <style>
-/* ... (기존 스타일 유지) ... */
 body {
 	margin: 0;
 	font-family: Arial, sans-serif;
@@ -40,9 +37,21 @@ body {
 }
 
 .header-left {
+	display: flex;
+	align-items: center;
 	font-size: 1.2em;
 	font-weight: bold;
 	color: white;
+}
+
+.menu-toggle {
+	font-size: 1.5em;
+	cursor: pointer;
+	margin-right: 15px;
+	display: none;
+	color: white;
+	padding: 0 5px;
+	line-height: 1;
 }
 
 .header-right a {
@@ -66,6 +75,7 @@ body {
 	padding: 20px 0;
 	background-color: #e6f0ff;
 	border-right: 1px solid #ddd;
+	flex-shrink: 0;
 }
 
 .sidebar h4 {
@@ -106,7 +116,7 @@ body {
 	padding: 50px;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 	text-align: center;
 }
@@ -115,7 +125,6 @@ body {
 	color: #0056b3;
 	margin-bottom: 30px;
 }
-/* 수정 폼 개별 스타일 */
 .edit-form-box {
 	padding: 30px;
 	border: 1px solid #ddd;
@@ -189,8 +198,47 @@ body {
 	margin-bottom: 15px;
 	display: block;
 }
+
+@media ( max-width : 1000px) {
+	.sidebar {
+		display: none;
+		position: absolute;
+		z-index: 1000;
+		height: auto;
+		min-height: calc(100vh - 44px);
+		box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+	}
+	.menu-toggle {
+		display: block;
+	}
+	.header-left a {
+		margin-left: 0;
+		padding-left: 0;
+	}
+	.container {
+		flex-direction: column;
+	}
+	.main-content {
+		padding: 20px;
+	}
+	.edit-form-box {
+		width: 100%;
+		max-width: 450px;
+	}
+}
 </style>
 <script>
+	function toggleSidebar() {
+		const sidebar = document.querySelector('.sidebar');
+		if (sidebar) {
+			if (sidebar.style.display === 'block') {
+				sidebar.style.display = 'none';
+			} else {
+				sidebar.style.display = 'block';
+			}
+		}
+	}
+
 	/**
 	 * 숫자만 허용하고, 4번째와 9번째에 하이픈(-)을 자동으로 추가합니다. (전화번호)
 	 */
@@ -228,7 +276,6 @@ body {
 			return false;
 		}
 		
-		// 전화번호 유효성 검사 (10자리 또는 11자리)
         const phoneValue = phoneField.value.replace(/[^0-9]/g, ""); 
         
         if (phoneValue.length > 0 && (phoneValue.length < 10 || phoneValue.length > 11)) {
@@ -261,7 +308,8 @@ body {
 
 	<div class="header">
 		<div class="header-left">
-			<a href="<%=contextPath%>/Default.jsp"
+			<span class="menu-toggle" onclick="toggleSidebar()">&#9776;</span> <a
+				href="<%=contextPath%>/Default.jsp"
 				style="color: white; text-decoration: none;">WevProject_PaekEH</a>
 		</div>
 		<div class="header-right">
@@ -300,24 +348,35 @@ body {
 					<label for="id">아이디</label> <input type="text" id="id" name="id"
 						value="<%=dto.getId()%>" readonly style="background-color: #eee;">
 
-					<label for="name">이름</label> <input type="text" id="name"
-						name="name" required placeholder="이름" value="<%=dto.getName()%>"
-						maxlength="30"> <label for="email">이메일</label> <input
-						type="email" id="email" name="email" required
-						placeholder="example@domain.com" maxlength="100"
+					<label for="name">이름</label> 
+					<input type="text" id="name" name="name" required placeholder="이름" 
+						value="<%=dto.getName()%>" maxlength="30"> <label for="email">
+						이메일
+					</label> 
+					<input type="email" id="email" name="email" 
+						required placeholder="example@domain.com" maxlength="100"
 						value="<%=dto.getEmail() != null ? dto.getEmail() : ""%>">
 
-					<label for="phone">전화번호</label> <input type="tel" id="phone"
-						name="phone" required placeholder="010-1234-5678"
+					<label for="phone">
+						전화번호
+					</label> 
+					<input type="tel" id="phone" name="phone" 
+						required placeholder="010-1234-5678"
 						oninput="formatPhoneNumber(this)"
 						value="<%=dto.getPhone() != null ? dto.getPhone() : ""%>">
 
 					<label for="newPass">새 비밀번호 (선택)</label> <input type="password"
-						id="newPass" name="newPass" placeholder="새 비밀번호 (변경하지 않으려면 비워두세요)"
-						maxlength="20"> <span class="info-text">비밀번호를 변경하지
-						않으려면 비워두세요.</span> <label for="pass">현재 비밀번호 (필수 인증)</label> <input
-						type="password" id="pass" name="pass" required
-						placeholder="정보 수정을 위해 현재 비밀번호를 입력하세요" maxlength="20"> <input
+						id="newPass" name="newPass" 
+						placeholder="새 비밀번호 (변경하지 않으려면 비워두세요)" maxlength="20"> 
+					<span class="info-text">
+						비밀번호를 변경하지 않으려면 비워두세요.
+					</span> 
+					<label for="pass">
+						현재 비밀번호 (필수 인증)
+					</label> 
+					<input type="password" id="pass" name="pass" 
+						required placeholder="정보 수정을 위해 현재 비밀번호를 입력하세요" maxlength="20"> 
+					<input
 						type="submit" value="정보 수정 완료">
 				</form>
 				<a href="javascript:goHome()" class="btn-cancel">취소/메인으로</a>

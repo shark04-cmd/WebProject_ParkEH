@@ -299,9 +299,6 @@ body {
 		return true; // 제출 허용
 	}
 	
-	/**
-     * 아이디 중복을 AJAX로 확인하고 결과를 화면에 표시합니다.
-     */
     function checkIdDuplication() {
         const idField = document.getElementById('id');
         const idMessage = document.getElementById('idMessage');
@@ -404,15 +401,26 @@ body {
 				<form action="<%=contextPath%>/member/register.do" method="post"
 					onsubmit="return validateForm()">
 
-					<label for="id">아이디</label> <input type="text" id="id" name="id"
-						required placeholder="아이디" maxlength="20"
+					<label for="id">아이디</label> 
+					<input type="text" id="id" name="id" required placeholder="아이디" maxlength="20"
 						value="<%=id != null ? id : ""%>" oninput="checkIdDuplication()">
-					<span id="idMessage" class="validation-message info">아이디는 최소
-						4자 이상 입력해야 확인됩니다.</span> <label for="pass">패스워드</label> <input
-						type="password" id="pass" name="pass" required placeholder="비밀번호"
-						maxlength="20"> <label for="passConfirm">패스워드 확인</label> <input
-						type="password" id="passConfirm" name="passConfirm" required
-						placeholder="비밀번호 확인" maxlength="20"> <label for="name">이름</label>
+					<span id="idMessage" class="validation-message info">
+						아이디는 최소 4자 이상 입력해야 확인됩니다.
+					</span>
+					<label for="pass">
+						패스워드
+					</label>
+					<input type="password" id="pass" name="pass" 
+						required placeholder="비밀번호" maxlength="20"> 
+					<label for="passConfirm">
+						패스워드 확인
+					</label> 
+					<input type="password" id="passConfirm" 
+						name="passConfirm" required placeholder="비밀번호 확인" 
+						maxlength="20">
+					<label for="name">
+						이름
+					</label>
 					<input type="text" id="name" name="name" required placeholder="이름"
 						maxlength="30" value="<%=name != null ? name : ""%>"> <label
 						for="email">이메일</label> <input type="email" id="email"
